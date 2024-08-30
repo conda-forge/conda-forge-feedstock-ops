@@ -81,12 +81,9 @@ def _run_bot_task(func, *, log_level, existing_feedstock_node_attrs, **kwargs):
     ):
         os.makedirs(os.path.join(tmpdir_cbld, "conda-bld"), exist_ok=True)
 
-        from conda_forge_tick.lazy_json_backends import (
-            dumps,
-            lazy_json_override_backends,
-        )
-        from conda_forge_tick.os_utils import pushd
-        from conda_forge_tick.utils import setup_logging
+        from conda_forge_feedstock_ops import setup_logging
+        from conda_forge_feedstock_ops.json import dumps
+        from conda_forge_feedstock_ops.os_utils import pushd
 
         data = None
         ret = copy.copy(kwargs)
@@ -102,11 +99,9 @@ def _run_bot_task(func, *, log_level, existing_feedstock_node_attrs, **kwargs):
                     attrs = _get_existing_feedstock_node_attrs(
                         existing_feedstock_node_attrs
                     )
-                    with lazy_json_override_backends(["github"], use_file_cache=False):
-                        data = func(attrs=attrs, **kwargs)
+                    data = func(attrs=attrs, **kwargs)
                 else:
-                    with lazy_json_override_backends(["github"], use_file_cache=False):
-                        data = func(**kwargs)
+                    data = func(**kwargs)
 
             ret["data"] = data
 
@@ -119,7 +114,7 @@ def _run_bot_task(func, *, log_level, existing_feedstock_node_attrs, **kwargs):
 
 
 def _execute_git_cmds_and_report(*, cmds, cwd, msg):
-    logger = logging.getLogger("conda_forge_tick.container")
+    logger = logging.getLogger("conda_forge_feedstock_ops.container")
 
     try:
         _output = ""
@@ -140,18 +135,18 @@ def _execute_git_cmds_and_report(*, cmds, cwd, msg):
 
 
 def _rerender_feedstock(*, timeout):
-    from conda_forge_tick.os_utils import (
+    from conda_forge_feedstock_ops.os_utils import (
         chmod_plus_rwX,
         get_user_execute_permissions,
         reset_permissions_with_user_execute,
         sync_dirs,
     )
-    from conda_forge_tick.rerender_feedstock import rerender_feedstock_local
+    from conda_forge_feedstock_ops.rerender import rerender_local
 
-    logger = logging.getLogger("conda_forge_tick.container")
+    logger = logging.getLogger("conda_forge_feedstock_ops.container")
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        input_fs_dir = glob.glob("/cf_tick_dir/*-feedstock")
+        input_fs_dir = glob.glob("/cf_feedstock_ops_dir/*-feedstock")
         assert len(input_fs_dir) == 1, f"expected one feedstock, got {input_fs_dir}"
         input_fs_dir = input_fs_dir[0]
         logger.debug(
@@ -160,7 +155,8 @@ def _rerender_feedstock(*, timeout):
             os.listdir(input_fs_dir),
         )
         input_permissions = os.path.join(
-            "/cf_tick_dir", f"permissions-{os.path.basename(input_fs_dir)}.json"
+            "/cf_feedstock_ops_dir",
+            f"permissions-{os.path.basename(input_fs_dir)}.json",
         )
         with open(input_permissions) as f:
             input_permissions = json.load(f)
@@ -200,7 +196,7 @@ def _rerender_feedstock(*, timeout):
             kwargs = {"timeout": timeout}
         else:
             kwargs = {}
-        msg = rerender_feedstock_local(fs_dir, **kwargs)
+        msg = rerender_local(fs_dir, **kwargs)
 
         if logger.getEffectiveLevel() <= logging.DEBUG:
             cmds = [

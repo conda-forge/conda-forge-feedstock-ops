@@ -111,7 +111,7 @@ def run_container_operation(
     input
         The input to pass to the container, by default None.
     mount_dir
-        The directory to mount to the container at `/cf_tick_dir`, by default None.
+        The directory to mount to the container at `/cf_feedstock_ops_dir`, by default None.
     mount_readonly
         Whether to mount the directory as read-only, by default True.
 
@@ -122,7 +122,10 @@ def run_container_operation(
     """
     if mount_dir is not None:
         mount_dir = os.path.abspath(mount_dir)
-        mnt_args = ["--mount", f"type=bind,source={mount_dir},destination=/cf_tick_dir"]
+        mnt_args = [
+            "--mount",
+            f"type=bind,source={mount_dir},destination=/cf_feedstock_ops_dir",
+        ]
         if mount_readonly:
             mnt_args[-1] += ",readonly"
     else:
