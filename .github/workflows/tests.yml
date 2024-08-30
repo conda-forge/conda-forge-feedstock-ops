@@ -52,3 +52,7 @@ jobs:
           pip uninstall conda-forge-feedstock-ops --yes
 
           python -m pip install -v --no-deps --no-build-isolation -e .
+
+      - name: run tests
+        run: |
+          pytest -vvs tests
