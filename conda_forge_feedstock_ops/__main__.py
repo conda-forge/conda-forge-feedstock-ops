@@ -155,7 +155,9 @@ def _rerender_feedstock(*, timeout):
         assert len(input_fs_dir) == 1, f"expected one feedstock, got {input_fs_dir}"
         input_fs_dir = input_fs_dir[0]
         logger.debug(
-            "input container feedstock dir %s: %s", input_fs_dir, os.listdir(input_fs_dir)
+            "input container feedstock dir %s: %s",
+            input_fs_dir,
+            os.listdir(input_fs_dir),
         )
         input_permissions = os.path.join(
             "/cf_tick_dir", f"permissions-{os.path.basename(input_fs_dir)}.json"
@@ -165,7 +167,9 @@ def _rerender_feedstock(*, timeout):
 
         fs_dir = os.path.join(tmpdir, os.path.basename(input_fs_dir))
         sync_dirs(input_fs_dir, fs_dir, ignore_dot_git=True, update_git=False)
-        logger.debug("copied container feedstock dir %s: %s", fs_dir, os.listdir(fs_dir))
+        logger.debug(
+            "copied container feedstock dir %s: %s", fs_dir, os.listdir(fs_dir)
+        )
 
         reset_permissions_with_user_execute(fs_dir, input_permissions)
 
