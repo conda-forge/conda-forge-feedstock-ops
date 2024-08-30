@@ -1,0 +1,54 @@
+name: tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request: null
+
+env:
+  PY_COLORS: "1"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: tests
+    runs-on: "ubuntu-latest"
+    defaults:
+      run:
+        shell: bash -leo pipefail {0}
+
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
+
+      - uses: mamba-org/setup-micromamba@f8b8a1e23a26f60a44c853292711bacfd3eac822 # v1
+        with:
+          environment-file: environment.yml
+
+      - name: configure conda and install code
+        run: |
+          micromamba install \
+            pip setuptools setuptools_scm python-build \
+            pytest \
+            flaky
+          pip install --no-deps --no-build-isolation -e .
+
+      - name: test versions
+        run: |
+          cd ..
+          python -c "import conda_forge_feedstock_ops; assert conda_forge_feedstock_ops.__version__ != '0.0.0'"
+          cd -
+
+          pip uninstall conda-forge-feedstock-ops --yes
+          rm -rf dist/*
+          python -m build --sdist . --outdir dist
+          pip install --no-deps --no-build-isolation dist/*.tar.gz
+          cd ..
+          python -c "import conda_forge_feedstock_ops; assert conda_forge_feedstock_ops.__version__ != '0.0.0'"
+          cd -
+          pip uninstall conda-forge-feedstock-ops --yes
+
+          python -m pip install -v --no-deps --no-build-isolation -e .

@@ -1,0 +1,48 @@
+[build-system]
+requires = [
+    "setuptools>=45",
+    "setuptools_scm>=8",
+    "tomli>=1.0.0; python_version < '3.11'",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "conda-forge-feedstock-ops"
+authors = [
+    {name = "conda-forge-tick development team", email = "condaforge@gmail.com"},
+]
+description = "A package of containerized feedstock maintenance operations"
+dynamic = ["version"]
+license = {file = "LICENSE"}
+readme = "README.md"
+
+[project.urls]
+home = "https://github.com/regro/conda-forge-feedstock-ops"
+
+[tool.setuptools.packages.find]
+exclude = ['tests*']
+
+[tool.setuptools_scm]
+write_to = "conda_forge_feedstock_ops/_version.py"
+write_to_template = "__version__ = '{version}'\n"
+
+[tool.ruff.lint]
+ignore = [
+    "E501",  # https://docs.astral.sh/ruff/faq/#is-the-ruff-linter-compatible-with-black
+]
+select = [
+    # pyflakes
+    "F",
+    # pycodestyle
+    "E", "W",
+    # isort
+    "I",
+    # pep8-naming
+    "N",
+    # pypugrade
+    "UP",
+    # flake8-logging-format
+    "G",
+    # flake8-tidy-imports
+    "TID",
+]
