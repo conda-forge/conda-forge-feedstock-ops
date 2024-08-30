@@ -19,6 +19,9 @@ readme = "README.md"
 [project.urls]
 home = "https://github.com/regro/conda-forge-feedstock-ops"
 
+[project.scripts]
+conda-forge-feedstock-ops-container = "conda_forge_feedstock_ops.__main__:main_container"
+
 [tool.setuptools.packages.find]
 exclude = ['tests*']
 
@@ -37,8 +40,6 @@ select = [
     "E", "W",
     # isort
     "I",
-    # pep8-naming
-    "N",
     # pypugrade
     "UP",
     # flake8-logging-format
