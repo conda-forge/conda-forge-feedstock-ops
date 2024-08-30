@@ -56,3 +56,7 @@ jobs:
       - name: run tests
         run: |
           pytest -vvs tests
+
+      - name: ensure cli runs
+        run: |
+          conda-forge-feedstock-ops-container --help

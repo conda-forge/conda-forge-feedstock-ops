@@ -225,21 +225,17 @@ def _rerender_feedstock(*, timeout):
 
 
 @click.group()
-def main():
+def main_container():
     pass
 
 
-@main.command(name="rerender-")
+@main_container.command(name="rerender")
 @log_level_option
 @click.option("--timeout", default=None, type=int, help="The timeout for the rerender.")
-def rerender_feedstock(log_level, timeout):
+def main_container_rerender(log_level, timeout):
     return _run_bot_task(
         _rerender_feedstock,
         log_level=log_level,
         existing_feedstock_node_attrs=None,
         timeout=timeout,
     )
-
-
-if __name__ == "__main__":
-    main()
