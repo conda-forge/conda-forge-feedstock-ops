@@ -8,7 +8,7 @@ import tempfile
 import time
 from threading import Event, Thread
 
-from conda_forge_feedstock_ops.container_utils import run_container_task
+from conda_forge_feedstock_ops.container_utils import run_container_operation
 from conda_forge_feedstock_ops.os_utils import (
     chmod_plus_rwX,
     get_user_execute_permissions,
@@ -105,7 +105,7 @@ def rerender_containerized(feedstock_dir, timeout=None):
             os.listdir(tmp_feedstock_dir),
         )
 
-        data = run_container_task(
+        data = run_container_operation(
             "rerender-feedstock",
             args,
             mount_readonly=False,
