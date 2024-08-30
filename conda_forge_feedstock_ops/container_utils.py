@@ -138,7 +138,7 @@ def run_container_operation(
         *get_default_container_run_args(tmpfs_size_mb=tmpfs_size_mb),
         *mnt_args,
         get_default_container_name(),
-        "conda-forge-feedstock-ops",
+        "conda-forge-feedstock-ops-container",
         name,
         *args,
         "--log-level",

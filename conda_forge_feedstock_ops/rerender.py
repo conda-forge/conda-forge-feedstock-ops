@@ -106,7 +106,7 @@ def rerender_containerized(feedstock_dir, timeout=None):
         )
 
         data = run_container_operation(
-            "rerender-feedstock",
+            "rerender",
             args,
             mount_readonly=False,
             mount_dir=tmpdir,

@@ -23,3 +23,10 @@ dependencies:
   - boltons >=23.0.0
   - py-rattler >=0.6.2,<0.7a0
   - python-rapidjson
+  # dev dependencies
+  - pip
+  - setuptools
+  - setuptools_scm
+  - python-build
+  - pytest
+  - flaky

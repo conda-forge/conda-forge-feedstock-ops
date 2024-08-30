@@ -30,10 +30,6 @@ jobs:
 
       - name: configure conda and install code
         run: |
-          micromamba install \
-            pip setuptools setuptools_scm python-build \
-            pytest \
-            flaky
           pip install --no-deps --no-build-isolation -e .
 
       - name: test versions
@@ -52,6 +48,19 @@ jobs:
           pip uninstall conda-forge-feedstock-ops --yes
 
           python -m pip install -v --no-deps --no-build-isolation -e .
+
+      - name: set up docker buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: build docker image
+        uses: docker/build-push-action@16ebe778df0e7752d2cfcbd924afdbbd89c1a755 # v6
+        with:
+          context: .
+          push: false
+          load: true
+          tags: conda-forge-feedstock-ops:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: run tests
         run: |
