@@ -87,6 +87,15 @@ def get_default_container_run_args(
     )
 
 
+def get_default_log_level_args():
+    log_level_str = str(logging.getLevelName(logger.getEffectiveLevel())).lower()
+    logger.debug("computed effective logging level: %s", log_level_str)
+    return [
+        "--log-level",
+        log_level_str,
+    ]
+
+
 def run_container_operation(
     args: Iterable[str],
     json_loads: Callable = json.loads,
@@ -128,16 +137,11 @@ def run_container_operation(
     else:
         mnt_args = []
 
-    log_level_str = str(logging.getLevelName(logger.getEffectiveLevel())).lower()
-    logger.debug("computed effective logging level: %s", log_level_str)
-
     cmd = [
         *get_default_container_run_args(tmpfs_size_mb=tmpfs_size_mb),
         *mnt_args,
         get_default_container_name(),
         *args,
-        "--log-level",
-        log_level_str,
     ]
     res = subprocess.run(
         cmd,

@@ -8,7 +8,10 @@ import tempfile
 import time
 from threading import Event, Thread
 
-from conda_forge_feedstock_ops.container_utils import run_container_operation
+from conda_forge_feedstock_ops.container_utils import (
+    get_default_log_level_args,
+    run_container_operation,
+)
 from conda_forge_feedstock_ops.os_utils import (
     chmod_plus_rwX,
     get_user_execute_permissions,
@@ -74,7 +77,10 @@ def rerender_containerized(feedstock_dir, timeout=None):
     str
         The commit message for the rerender. If None, the rerender didn't change anything.
     """
-    args = ["conda-forge-feedstock-ops-container", "rerender"]
+    args = [
+        "conda-forge-feedstock-ops-container",
+        "rerender",
+    ] + get_default_log_level_args()
 
     if timeout is not None:
         args += ["--timeout", str(timeout)]
