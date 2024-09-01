@@ -33,8 +33,8 @@ def get_default_container_name():
 class ContainerRuntimeError(RuntimeError):
     """An error raised when running a container fails."""
 
-    def __init__(self, *, error, name, cmd, returncode, traceback=None):
-        self.name = name
+    def __init__(self, *, error, args, cmd, returncode, traceback=None):
+        self.args = args
         self.cmd = cmd
         self.returncode = returncode
         self.traceback = traceback
@@ -88,7 +88,6 @@ def get_default_container_run_args(
 
 
 def run_container_operation(
-    name: str,
     args: Iterable[str],
     json_loads: Callable = json.loads,
     tmpfs_size_mb: int = DEFAULT_CONTAINER_TMPFS_SIZE_MB,
@@ -100,8 +99,6 @@ def run_container_operation(
 
     Parameters
     ----------
-    name
-        The name of the operation.
     args
         The arguments to pass to the container.
     json_loads
@@ -138,8 +135,6 @@ def run_container_operation(
         *get_default_container_run_args(tmpfs_size_mb=tmpfs_size_mb),
         *mnt_args,
         get_default_container_name(),
-        "conda-forge-feedstock-ops-container",
-        name,
         *args,
         "--log-level",
         log_level_str,
@@ -153,10 +148,10 @@ def run_container_operation(
     # we handle this ourselves to customize the error message
     if res.returncode != 0:
         raise ContainerRuntimeError(
-            error=f"Error running {name} in container - return code {res.returncode}:"
+            error=f"Error running '{' '.join(args)}' in container - return code {res.returncode}:"
             f"\ncmd: {pprint.pformat(cmd)}"
             f"\noutput: {pprint.pformat(res.stdout)}",
-            name=name,
+            args=args,
             cmd=pprint.pformat(cmd),
             returncode=res.returncode,
         )
@@ -165,10 +160,10 @@ def run_container_operation(
         ret = json_loads(res.stdout)
     except json.JSONDecodeError:
         raise ContainerRuntimeError(
-            error=f"Error running {name} in container - JSON could not parse stdout:"
+            error=f"Error running '{' '.join(args)}' in container - JSON could not parse stdout:"
             f"\ncmd: {pprint.pformat(cmd)}"
             f"\noutput: {pprint.pformat(res.stdout)}",
-            name=name,
+            args=args,
             cmd=pprint.pformat(cmd),
             returncode=res.returncode,
         )
@@ -182,8 +177,8 @@ def run_container_operation(
             .decode("unicode_escape")
         )
         raise ContainerRuntimeError(
-            error=f"Error running {name} in container - error {ret['error'].split('(')[0]} raised:\n{ret_str}",
-            name=name,
+            error=f"Error running '{' '.join(args)}' in container - error {ret['error'].split('(')[0]} raised:\n{ret_str}",
+            args=args,
             cmd=pprint.pformat(cmd),
             returncode=res.returncode,
             traceback=ret["traceback"]

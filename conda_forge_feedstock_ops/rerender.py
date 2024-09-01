@@ -74,7 +74,7 @@ def rerender_containerized(feedstock_dir, timeout=None):
     str
         The commit message for the rerender. If None, the rerender didn't change anything.
     """
-    args = []
+    args = ["conda-forge-feedstock-ops-container", "rerender"]
 
     if timeout is not None:
         args += ["--timeout", str(timeout)]
@@ -106,7 +106,6 @@ def rerender_containerized(feedstock_dir, timeout=None):
         )
 
         data = run_container_operation(
-            "rerender",
             args,
             mount_readonly=False,
             mount_dir=tmpdir,
