@@ -80,7 +80,7 @@ def rerender_containerized(feedstock_dir, timeout=None):
     args = [
         "conda-forge-feedstock-ops-container",
         "rerender",
-    ] + get_default_log_level_args()
+    ] + get_default_log_level_args(logger)
 
     if timeout is not None:
         args += ["--timeout", str(timeout)]

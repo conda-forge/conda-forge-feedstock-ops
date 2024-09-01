@@ -87,7 +87,7 @@ def get_default_container_run_args(
     )
 
 
-def get_default_log_level_args():
+def get_default_log_level_args(logger):
     log_level_str = str(logging.getLevelName(logger.getEffectiveLevel())).lower()
     logger.debug("computed effective logging level: %s", log_level_str)
     return [
