@@ -11,6 +11,7 @@ from threading import Event, Thread
 from conda_forge_feedstock_ops.container_utils import (
     get_default_log_level_args,
     run_container_operation,
+    should_use_container,
 )
 from conda_forge_feedstock_ops.os_utils import (
     chmod_plus_rwX,
@@ -43,12 +44,7 @@ def rerender(feedstock_dir, timeout=None, use_container=None):
     str
         The commit message for the rerender. If None, the rerender didn't change anything.
     """
-
-    in_container = os.environ.get("CF_FEEDSTOCK_OPS_IN_CONTAINER", "false") == "true"
-    if use_container is None:
-        use_container = not in_container
-
-    if use_container and not in_container:
+    if should_use_container(use_container=use_container):
         return rerender_containerized(
             feedstock_dir,
             timeout=timeout,

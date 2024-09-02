@@ -26,7 +26,10 @@ def override_env(name, value):
     """Override an environment variable temporarily."""
     old = os.environ.get(name)
     try:
-        os.environ[name] = value
+        if value is None:
+            del os.environ[name]
+        else:
+            os.environ[name] = value
         yield
     finally:
         if old is None:

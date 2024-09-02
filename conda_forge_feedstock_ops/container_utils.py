@@ -191,3 +191,31 @@ def run_container_operation(
         )
 
     return ret["data"]
+
+
+def should_use_container(use_container: Optional[bool] = None):
+    """Determine if we should use a container.
+
+    Parameters
+    ----------
+    use_container
+        Whether to use a container to run the rerender.
+        If None, the function will use a container if the environment
+        variable `CF_FEEDSTOCK_OPS_IN_CONTAINER` is 'false'. This feature can be
+        used to avoid container in container calls.
+
+    Returns
+    -------
+    bool
+        Whether to use a container.
+    """
+    in_container = (
+        os.environ.get("CF_FEEDSTOCK_OPS_IN_CONTAINER", "false").lower() == "true"
+    )
+    if use_container is None:
+        use_container = not in_container
+
+    if use_container and not in_container:
+        return True
+    else:
+        return False
