@@ -224,6 +224,41 @@ def _rerender_feedstock(*, timeout):
         return {"commit_message": msg, "permissions": output_permissions}
 
 
+def _parse_package_and_feedstock_names():
+    from conda_forge_feedstock_ops.os_utils import sync_dirs
+    from conda_forge_feedstock_ops.parse_package_and_feedstock_names import (
+        parse_package_and_feedstock_names,
+    )
+
+    logger = logging.getLogger("conda_forge_feedstock_ops.container")
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        input_fs_dir = glob.glob("/cf_feedstock_ops_dir/*-feedstock")
+        assert len(input_fs_dir) == 1, f"expected one feedstock, got {input_fs_dir}"
+        input_fs_dir = input_fs_dir[0]
+        logger.debug(
+            "input container feedstock dir %s: %s",
+            input_fs_dir,
+            os.listdir(input_fs_dir),
+        )
+
+        fs_dir = os.path.join(tmpdir, os.path.basename(input_fs_dir))
+        sync_dirs(input_fs_dir, fs_dir, ignore_dot_git=True, update_git=False)
+        logger.debug(
+            "copied container feedstock dir %s: %s", fs_dir, os.listdir(fs_dir)
+        )
+
+        fs_name, pkg_names, subdirs = parse_package_and_feedstock_names(
+            fs_dir, use_container=False
+        )
+
+        return {
+            "feedstock_name": fs_name,
+            "package_names": pkg_names,
+            "subdirs": subdirs,
+        }
+
+
 @click.group()
 def main_container():
     pass
@@ -238,4 +273,14 @@ def main_container_rerender(log_level, timeout):
         log_level=log_level,
         existing_feedstock_node_attrs=None,
         timeout=timeout,
+    )
+
+
+@main_container.command(name="parse-package-and-feedstock-names")
+@log_level_option
+def main_parse_package_and_feedstock_names(log_level, timeout):
+    return _run_bot_task(
+        _parse_package_and_feedstock_names,
+        log_level=log_level,
+        existing_feedstock_node_attrs=None,
     )

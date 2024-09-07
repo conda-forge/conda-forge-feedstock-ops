@@ -5,10 +5,10 @@ A package of containerized feedstock maintenance operations
 
 ## Container Setup
 
-This package works by running commands inside of a container on-the-fly in order to 
-perform operations on feedstocks in the presence of sensitive data. 
+This package works by running commands inside of a container on-the-fly in order to
+perform operations on feedstocks in the presence of sensitive data.
 
-### Input 
+### Input
 
 Data can be input into the container via one of three mechanisms
 
@@ -24,10 +24,10 @@ Data is returned to the calling process via one of two ways
 1. The container can print a json blob to `stdout`. This json blob must
    have only two top-level keys, `error` and `data`. Any output data should
    be put in the `data` key. The `error` key is discussed below.
-4. The container can put data in the `/cf_feedstock_ops_dir` if it is not mounted
+2. The container can put data in the `/cf_feedstock_ops_dir` if it is not mounted
    as read-only.
 
-**IMPORTANT: The container can only print a valid json blob to `stdout`. 
+**IMPORTANT: The container can only print a valid json blob to `stdout`.
 All other output should be sent to `stderr`.**
 
 ### Error Handling
@@ -42,9 +42,9 @@ Errors in running the container raise a `ContainerRuntimeError` error.
 ## Building Your Own Container
 
 In order to make your own container that uses this package, you should copy and edit
-the `Dockerfile` in this repo. 
+the `Dockerfile` in this repo.
 
-There are a few important points to keep in mind when doing this. 
+There are a few important points to keep in mind when doing this.
 
 - The container runs using a non-root user. This is an important security measure and should be kept.
 - The container uses an entrypoint to activate an internal conda environment and then run a command via `exec`.

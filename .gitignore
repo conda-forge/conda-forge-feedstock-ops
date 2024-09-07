@@ -162,3 +162,5 @@ cython_debug/
 #.idea/
 
 conda_forge_feedstock_ops/_version.py
+*/.DS_Store
+.ruff_cache/*
