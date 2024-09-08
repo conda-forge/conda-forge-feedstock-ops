@@ -64,8 +64,7 @@ jobs:
 
       - name: run tests
         run: |
-          # pytest -vvs tests
-          pytest -vvsx --log-cli-level=debug -k test_parse_package_and_feedstock_names_llvmdev_container
+          pytest -vvs tests
 
       - name: ensure cli runs
         run: |
