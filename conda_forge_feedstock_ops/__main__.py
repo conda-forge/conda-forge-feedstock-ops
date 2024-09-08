@@ -278,7 +278,7 @@ def main_container_rerender(log_level, timeout):
 
 @main_container.command(name="parse-package-and-feedstock-names")
 @log_level_option
-def main_parse_package_and_feedstock_names(log_level, timeout):
+def main_parse_package_and_feedstock_names(log_level):
     return _run_bot_task(
         _parse_package_and_feedstock_names,
         log_level=log_level,
