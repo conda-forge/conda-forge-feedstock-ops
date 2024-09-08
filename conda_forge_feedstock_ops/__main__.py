@@ -233,10 +233,6 @@ def _parse_package_and_feedstock_names():
     logger = logging.getLogger("conda_forge_feedstock_ops.container")
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        logger.debug(
-            "input container mount dir /cf_feedstock_ops_dir: %s",
-            os.listdir("/cf_feedstock_ops_dir"),
-        )
         input_fs_dir = glob.glob("/cf_feedstock_ops_dir/*-feedstock")
         assert len(input_fs_dir) == 1, f"expected one feedstock, got {input_fs_dir}"
         input_fs_dir = input_fs_dir[0]
