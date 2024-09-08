@@ -1,7 +1,25 @@
 # conda-forge-feedstock-ops
-[![tests](https://github.com/regro/conda-forge-feedstock-ops/actions/workflows/tests.yml/badge.svg)](https://github.com/regro/conda-forge-feedstock-ops/actions/workflows/tests.yml) [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/regro/conda-forge-feedstock-ops/main.svg)](https://results.pre-commit.ci/latest/github/regro/conda-forge-feedstock-ops/main)
+[![tests](https://github.com/conda-forge/conda-forge-feedstock-ops/actions/workflows/tests.yml/badge.svg)](https://github.com/conda-forge/conda-forge-feedstock-ops/actions/workflows/tests.yml) [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/conda-forge/conda-forge-feedstock-ops/main.svg)](https://results.pre-commit.ci/latest/github/conda-forge/conda-forge-feedstock-ops/main)
 
 A package of containerized feedstock maintenance operations
+
+## Getting Started & Usage
+
+To use this package, you should run it through the corresponding Python package.
+
+First, install the package:
+
+```bash
+conda install -c conda-forge conda-forge-feedstock-ops
+```
+
+Then for your feedstock, you can call commands like this:
+
+```python
+from conda_forge_feedstock_ops.rerender import rerender
+
+commit_msg = rerender(path_to_feedstock)
+```
 
 ## Container Setup
 

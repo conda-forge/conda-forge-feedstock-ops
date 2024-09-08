@@ -17,7 +17,7 @@ license = {file = "LICENSE"}
 readme = "README.md"
 
 [project.urls]
-home = "https://github.com/regro/conda-forge-feedstock-ops"
+home = "https://github.com/conda-forge/conda-forge-feedstock-ops"
 
 [project.scripts]
 conda-forge-feedstock-ops-container = "conda_forge_feedstock_ops.__main__:main_container"
