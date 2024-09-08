@@ -5,8 +5,7 @@ on:
     types: [published]
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: regro/conda-forge-feedstock-ops
+  IMAGE_NAME: condaforge/conda-forge-feedstock-ops
 
 concurrency:
   group: release
@@ -21,18 +20,17 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: log into ghcr.io
+      - name: log into dockerhub
         uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: condaforgebot
+          password: ${{ secrets.CF_BOT_DH_PASSWORD }}
 
       - name: build docker metadata
         id: meta
         uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81 # v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.IMAGE_NAME }}
           flavor: |
             latest=false
           tags: |
@@ -46,3 +44,14 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: push README to docker hub
+        uses: christian-korneck/update-container-description-action@d36005551adeaba9698d8d67a296bd16fa91f8e8 # v1
+        env:
+          DOCKER_USER: condaforgebot
+          DOCKER_PASS: ${{ secrets.CF_BOT_DH_PASSWORD }}
+        with:
+          destination_container_repo: ${{ env.IMAGE_NAME }}:latest
+          provider: dockerhub
+          short_description: "conda-forge image used for containerized feedstock operations"
+          readme_file: "Dockerfile_README.md"

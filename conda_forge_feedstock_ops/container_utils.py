@@ -15,7 +15,7 @@ DEFAULT_CONTAINER_TMPFS_SIZE_MB = 6000
 def get_default_container_name():
     """Get the default container name for feedstock ops.
 
-    The image is stored at `ghcr.io/regro/conda-forge-feedstock-ops`.
+    The image is stored at `condaforge/conda-forge-feedstock-ops`.
 
     If the environment variable `CF_FEEDSTOCK_OPS_CONTAINER_NAME` is set, then that name is used.
 
@@ -23,7 +23,7 @@ def get_default_container_name():
     Otherwise, we pull the tag `__version__`.
     """
     cname = (
-        f"{os.environ.get('CF_FEEDSTOCK_OPS_CONTAINER_NAME', 'ghcr.io/regro/conda-forge-feedstock-ops')}"
+        f"{os.environ.get('CF_FEEDSTOCK_OPS_CONTAINER_NAME', 'condaforge/conda-forge-feedstock-ops')}"
         + f":{os.environ.get('CF_FEEDSTOCK_OPS_CONTAINER_TAG', __version__)}"
     )
 
