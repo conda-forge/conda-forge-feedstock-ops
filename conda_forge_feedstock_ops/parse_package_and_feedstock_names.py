@@ -17,7 +17,8 @@ from conda_forge_feedstock_ops.container_utils import (
     run_container_operation,
     should_use_container,
 )
-from conda_forge_feedstock_ops.os_utils import override_env, sync_dirs
+from conda_forge_feedstock_ops.json import loads
+from conda_forge_feedstock_ops.os_utils import chmod_plus_rwX, override_env, sync_dirs
 
 logger = logging.getLogger(__name__)
 CONDA_BUILD = "conda-build"
@@ -63,6 +64,7 @@ def _parse_package_and_feedstock_names_containerized(feedstock_dir):
         sync_dirs(
             feedstock_dir, tmp_feedstock_dir, ignore_dot_git=True, update_git=False
         )
+        chmod_plus_rwX(tmpdir, recursive=True)
 
         logger.debug(
             "host feedstock dir %s: %r",
@@ -79,6 +81,7 @@ def _parse_package_and_feedstock_names_containerized(feedstock_dir):
             args,
             mount_readonly=True,
             mount_dir=tmpdir,
+            json_loads=loads,
         )
 
         # When tempfile removes tempdir, it tries to reset permissions on subdirs.

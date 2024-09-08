@@ -7,7 +7,6 @@ from conda_forge_feedstock_ops.parse_package_and_feedstock_names import (
 )
 
 
-@skipif_no_containers
 def test_parse_package_and_feedstock_names_llvmdev_local():
     feedstock_dir = os.path.join(os.path.dirname(__file__), "data", "llvmdev-feedstock")
     feedstock_name, package_names, subdirs = parse_package_and_feedstock_names(
@@ -35,7 +34,7 @@ def test_parse_package_and_feedstock_names_llvmdev_local():
 
 
 @skipif_no_containers
-def test_parse_package_and_feedstock_names_llvmdev_container():
+def test_parse_package_and_feedstock_names_llvmdev_container(use_containers):
     feedstock_dir = os.path.join(os.path.dirname(__file__), "data", "llvmdev-feedstock")
     feedstock_name, package_names, subdirs = parse_package_and_feedstock_names(
         feedstock_dir,
