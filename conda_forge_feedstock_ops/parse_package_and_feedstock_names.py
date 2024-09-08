@@ -17,6 +17,7 @@ from conda_forge_feedstock_ops.container_utils import (
     run_container_operation,
     should_use_container,
 )
+from conda_forge_feedstock_ops.json import loads
 from conda_forge_feedstock_ops.os_utils import override_env, sync_dirs
 
 logger = logging.getLogger(__name__)
@@ -79,6 +80,7 @@ def _parse_package_and_feedstock_names_containerized(feedstock_dir):
             args,
             mount_readonly=True,
             mount_dir=tmpdir,
+            json_loads=loads,
         )
 
         # When tempfile removes tempdir, it tries to reset permissions on subdirs.
