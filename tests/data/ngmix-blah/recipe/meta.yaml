@@ -1,0 +1,59 @@
+{% set name = "ngmix-split" %}
+{% set version = "2.3.1" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  url: https://github.com/esheldon/ngmix/archive/v{{ version }}.tar.gz
+  sha256: f0e8d44c6ce70194246f5560289bb9a41f9b52ea7e234e129cb215b5eadb2d22
+
+build:
+  number: 0
+  skip: true  # [win]
+
+outputs:
+  - name: ngmix-core
+    script: build_core.sh
+    requirements:
+      build:
+        - python                                 # [build_platform != target_platform]
+        - cross-python_{{ target_platform }}     # [build_platform != target_platform]
+      host:
+        - python
+        - pip
+      run:
+        - python
+        - numpy
+        - numba <0.41.0a|>=0.43.0,!=0.54.0  # bug in these numbas
+        - scipy
+        - galsim
+
+    test:
+      imports:
+        - ngmix
+
+  - name: ngmix
+    requirements:
+      host:
+        - python
+      run:
+        - python
+        - {{ pin_subpackage("ngmix-core", exact=True) }}
+        - meds
+    test:
+      imports:
+        - ngmix
+        - ngmix.medsreaders
+
+about:
+  home: https://github.com/esheldon/ngmix
+  license: GPL-2.0-only
+  license_family: GPL
+  license_file: gpl.txt
+  summary: Gaussian mixtures and image processing implemented in python and numba
+
+extra:
+  recipe-maintainers:
+    - beckermr
