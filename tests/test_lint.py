@@ -14,7 +14,10 @@ def test_lint_local():
     )
     assert len(hints) + len(lints) > 0
     all_keys = set(lints.keys()) | set(hints.keys())
-    assert all_keys == {"llvmdev-feedstock/recipe/meta.yaml", "ngmix-blah/recipe/meta.yaml"}
+    assert all_keys == {
+        "llvmdev-feedstock/recipe/meta.yaml",
+        "ngmix-blah/recipe/meta.yaml",
+    }
 
 
 @skipif_no_containers
@@ -26,4 +29,7 @@ def test_lint_container(use_containers):
     )
     assert len(hints) + len(lints) > 0
     all_keys = set(lints.keys()) | set(hints.keys())
-    assert all_keys == {"llvmdev-feedstock/recipe/meta.yaml", "ngmix-blah/recipe/meta.yaml"}
+    assert all_keys == {
+        "llvmdev-feedstock/recipe/meta.yaml",
+        "ngmix-blah/recipe/meta.yaml",
+    }

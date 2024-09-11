@@ -14,7 +14,7 @@ Current build status
 
 
 <table>
-    
+
   <tr>
     <td>Azure</td>
     <td>
@@ -297,4 +297,3 @@ Feedstock Maintainers
 =====================
 
 * [@beckermr](https://github.com/beckermr/)
-
