@@ -259,6 +259,31 @@ def _parse_package_and_feedstock_names():
         }
 
 
+def _lint():
+    from conda_forge_feedstock_ops.lint import lint
+    from conda_forge_feedstock_ops.os_utils import sync_dirs
+
+    logger = logging.getLogger("conda_forge_feedstock_ops.container")
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        input_fs_dir = "/cf_feedstock_ops_dir"
+        logger.debug(
+            "input container feedstock dir %s: %s",
+            input_fs_dir,
+            os.listdir(input_fs_dir),
+        )
+
+        fs_dir = os.path.join(tmpdir, os.path.basename(input_fs_dir))
+        sync_dirs(input_fs_dir, fs_dir, ignore_dot_git=True, update_git=False)
+        logger.debug(
+            "copied container feedstock dir %s: %s", fs_dir, os.listdir(fs_dir)
+        )
+
+        lints, hints = lint(fs_dir, use_container=False)
+
+        return {"lints": lints, "hints": hints}
+
+
 @click.group()
 def main_container():
     pass
@@ -281,6 +306,16 @@ def main_container_rerender(log_level, timeout):
 def main_parse_package_and_feedstock_names(log_level):
     return _run_bot_task(
         _parse_package_and_feedstock_names,
+        log_level=log_level,
+        existing_feedstock_node_attrs=None,
+    )
+
+
+@main_container.command(name="lint")
+@log_level_option
+def main_lint(log_level):
+    return _run_bot_task(
+        _lint,
         log_level=log_level,
         existing_feedstock_node_attrs=None,
     )

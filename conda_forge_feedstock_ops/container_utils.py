@@ -103,6 +103,7 @@ def run_container_operation(
     input: Optional[str] = None,
     mount_dir: Optional[str] = None,
     mount_readonly: bool = True,
+    extra_container_args: Optional[Iterable[str]] = None,
 ):
     """Run a feedstock operation in a container.
 
@@ -120,6 +121,8 @@ def run_container_operation(
         The directory to mount to the container at `/cf_feedstock_ops_dir`, by default None.
     mount_readonly
         Whether to mount the directory as read-only, by default True.
+    extra_container_args
+        Extra arguments to pass to the container, by default None.
 
     Returns
     -------
@@ -137,9 +140,12 @@ def run_container_operation(
     else:
         mnt_args = []
 
+    extra_container_args = extra_container_args or []
+
     cmd = [
         *get_default_container_run_args(tmpfs_size_mb=tmpfs_size_mb),
         *mnt_args,
+        *extra_container_args,
         get_default_container_name(),
         *args,
     ]
