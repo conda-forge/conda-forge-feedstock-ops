@@ -42,6 +42,10 @@ skipif_no_containers = pytest.mark.skipif(
     not (HAVE_CONTAINERS and HAVE_TEST_IMAGE), reason="containers not available"
 )
 
+skipif_no_github_token = pytest.mark.skipif(
+    "GH_TOKEN" not in os.environ, reason="no GH_TOKEN in environment"
+)
+
 
 @pytest.fixture(autouse=True, scope="session")
 def set_cf_feedstock_ops_container_tag_to_test():
