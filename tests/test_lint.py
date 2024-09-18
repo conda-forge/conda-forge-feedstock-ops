@@ -1,11 +1,10 @@
 import os
 
-from conftest import skipif_no_containers, skipif_no_github_token
+from conftest import skipif_no_containers
 
 from conda_forge_feedstock_ops.lint import lint
 
 
-@skipif_no_github_token
 def test_lint_local():
     feedstock_dir = os.path.join(os.path.dirname(__file__), "data")
     lints, hints = lint(
