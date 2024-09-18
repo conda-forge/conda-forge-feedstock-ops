@@ -8,7 +8,7 @@ platforms:
 dependencies:
   - click
   - conda-build >=3.27
-  - conda-smithy
+  - conda-smithy >=3.40
   - python-rapidjson
   - pyyaml
   - rattler-build-conda-compat >=0.0.2,<2.0.0a0

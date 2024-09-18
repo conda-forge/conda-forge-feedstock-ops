@@ -21,10 +21,6 @@ logger = logging.getLogger(__name__)
 def lint(feedstock_dir, use_container=None):
     """Lint all of the recipes in a feedstock.
 
-    **WARNING: This function will inject the GH_TOKEN env var into
-    the container in order to run conda-forge-specific linting.
-    Make sure that token is read-only.**
-
     Parameters
     ----------
     feedstock_dir : str
@@ -74,7 +70,6 @@ def _lint_containerized(feedstock_dir):
             mount_readonly=True,
             mount_dir=tmpdir,
             json_loads=loads,
-            extra_container_args=["-e", "GH_TOKEN"],
         )
 
         # When tempfile removes tempdir, it tries to reset permissions on subdirs.
