@@ -102,9 +102,14 @@ def _lint_local(feedstock_dir):
         recipe_dir = recipe.parent
         rel_path = str(recipe.relative_to(feedstock_dir))
 
-        _lints, _hints = conda_smithy.lint_recipe.main(
-            str(recipe_dir), conda_forge=True, return_hints=True
-        )
+        if recipe.name == "recipe.yaml":
+            # this is a v1 recipe and not yet handled
+            _hints = ["This is a v1 recipe and not yet lintable. We are working on it!"]
+            _lints = []
+        else:
+            _lints, _hints = conda_smithy.lint_recipe.main(
+                str(recipe_dir), conda_forge=True, return_hints=True
+            )
 
         lints[rel_path] = _lints
         hints[rel_path] = _hints
