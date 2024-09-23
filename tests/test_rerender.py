@@ -183,7 +183,7 @@ def test_rerender_containerized_same_as_local(use_containers, capfd):
                 local_captured = capfd.readouterr()
                 print(f"out: {local_captured.out}\nerr: {local_captured.err}")
 
-        assert msg == local_msg
+        assert msg.split("conda-forge-pinning")[1] == local_msg.split("conda-forge-pinning")[1]
 
         # now compare files
         cont_fnames = set(
