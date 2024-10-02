@@ -37,6 +37,9 @@ def lint(feedstock_dir, use_container=None):
         Dictionary mapping relative recipe path to its lints.
     hints : dict
         Dictionary mapping relative recipe path to its hints.
+    errors : dict
+        Dictionary mapping relative recipe path to whether an error occurred
+        while linting the recipe.
     """
     if should_use_container(use_container=use_container):
         return _lint_containerized(feedstock_dir)
@@ -77,7 +80,7 @@ def _lint_containerized(feedstock_dir):
         # in the container. So we remove the subdir we made before cleaning up.
         shutil.rmtree(tmpdir)
 
-    return data["lints"], data["hints"]
+    return data["lints"], data["hints"], data["errors"]
 
 
 #############################################################
@@ -97,19 +100,27 @@ def _lint_local(feedstock_dir):
 
     lints = defaultdict(list)
     hints = defaultdict(list)
+    errors = {}
 
     for recipe in recipes:
         recipe_dir = recipe.parent
         rel_path = str(recipe.relative_to(feedstock_dir))
 
-        _lints, _hints = conda_smithy.lint_recipe.main(
-            str(recipe_dir), conda_forge=True, return_hints=True
-        )
+        try:
+            _lints, _hints = conda_smithy.lint_recipe.main(
+                str(recipe_dir), conda_forge=True, return_hints=True
+            )
+            _error = False
+        except Exception:
+            _lints = []
+            _hints = []
+            _error = True
 
         lints[rel_path] = _lints
         hints[rel_path] = _hints
+        errors[rel_path] = _error
 
-    return dict(lints), dict(hints)
+    return dict(lints), dict(hints), errors
 
 
 # end of code from conda-forge-webservices w/ modifications
