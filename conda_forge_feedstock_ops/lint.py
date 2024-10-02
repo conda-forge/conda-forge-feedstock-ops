@@ -37,6 +37,9 @@ def lint(feedstock_dir, use_container=None):
         Dictionary mapping relative recipe path to its lints.
     hints : dict
         Dictionary mapping relative recipe path to its hints.
+    errors : dict
+        Dictionary mapping relative recipe path to whether an error occurred
+        while linting the recipe.
     """
     if should_use_container(use_container=use_container):
         return _lint_containerized(feedstock_dir)
