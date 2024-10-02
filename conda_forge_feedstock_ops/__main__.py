@@ -279,9 +279,9 @@ def _lint():
             "copied container feedstock dir %s: %s", fs_dir, os.listdir(fs_dir)
         )
 
-        lints, hints = lint(fs_dir, use_container=False)
+        lints, hints, errors = lint(fs_dir, use_container=False)
 
-        return {"lints": lints, "hints": hints}
+        return {"lints": lints, "hints": hints, "errors": errors}
 
 
 @click.group()
