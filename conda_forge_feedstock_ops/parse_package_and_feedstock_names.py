@@ -1,5 +1,4 @@
 import glob
-import json
 import logging
 import os
 import shutil
@@ -9,7 +8,7 @@ import conda_build.api
 import conda_build.config
 import rattler_build_conda_compat.render
 from conda_build.metadata import MetaData
-from conda_build.variants import list_of_dicts_to_dict_of_lists
+from conda_build.variants import combine_specs, parse_config_file
 from conda_smithy.utils import get_feedstock_name_from_meta
 from rattler_build_conda_compat.render import MetaData as RattlerBuildMetaData
 from yaml import safe_load
@@ -154,37 +153,6 @@ def _determine_build_tool(feedstock_root):
     return build_tool
 
 
-def _plain_dict_of_lists(variants):
-    """
-    conda-build's dict_of_lists uses OrderedDict, set
-
-    avoid yaml issues by casting this back to standard dict of lists via json
-    """
-
-    def _json_safe(obj):
-        if isinstance(obj, set):
-            return sorted(obj)
-        raise TypeError(repr(obj))
-
-    return json.loads(json.dumps(variants, default=_json_safe))
-
-
-def _rattler_load_variants(variant_file_list, additional_config):
-    """
-    Load variants for rattler-build
-    """
-    # rattler-build doesn't load the default variant config
-    # so recombine variants list
-    variant_list = []
-    for variant_file in variant_file_list:
-        with open(variant_file) as f:
-            variant_list.append(safe_load(f))
-    # rebuild variants dict
-    variants = dict(list_of_dicts_to_dict_of_lists(variant_list))
-    variants = _plain_dict_of_lists(variants)
-    return variants
-
-
 def _get_built_distribution_names_and_subdirs(
     recipe_dir, variant, build_tool=CONDA_BUILD
 ):
@@ -197,19 +165,29 @@ def _get_built_distribution_names_and_subdirs(
             break
 
     if build_tool == RATTLER_BUILD:
-        variants = _rattler_load_variants(variant, additional_config)
-        if "target_platform" in variants:
-            # rattler_build_conda_compat uses config.platform, config.arch
-            # ignoring target_platform from variants
-            platform, _, arch = variants["target_platform"][0].partition("-")
-            additional_config["platform"] = platform
-            additional_config["arch"] = arch
+        # cribbed from conda_forge_ci_setup.utils
+        # some conda-build magic here
+        with open(variant[-1]) as f:
+            final_variant = safe_load(f)
+        if "target_platform" in final_variant:
+            target_platform = final_variant["target_platform"][0]
+            if target_platform != "noarch":
+                platform, arch = target_platform.split("-")
+                additional_config["platform"] = platform
+                additional_config["arch"] = arch
+
+        config = conda_build.config.Config(**additional_config)
+
+        specs = {}
+        for _variant_fname in variant:
+            specs[_variant_fname] = parse_config_file(_variant_fname, config)
+        variants = combine_specs(specs, log_output=False)
         metas = rattler_build_conda_compat.render.render(
             recipe_dir,
             variants=variants,
             finalize=False,
             bypass_env_check=True,
-            **additional_config,
+            config=config,
         )
     else:
         metas = conda_build.api.render(
