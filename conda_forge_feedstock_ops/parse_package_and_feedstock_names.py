@@ -8,6 +8,7 @@ import conda_build.api
 import conda_build.config
 import rattler_build_conda_compat.render
 from conda_build.metadata import MetaData
+from conda_build.variants import combine_specs, parse_config_file
 from conda_smithy.utils import get_feedstock_name_from_meta
 from rattler_build_conda_compat.render import MetaData as RattlerBuildMetaData
 from yaml import safe_load
@@ -164,12 +165,29 @@ def _get_built_distribution_names_and_subdirs(
             break
 
     if build_tool == RATTLER_BUILD:
+        # cribbed from conda_forge_ci_setup.utils
+        # some conda-build magic here
+        with open(variant[-1]) as f:
+            final_variant = safe_load(f)
+        if "target_platform" in final_variant:
+            target_platform = final_variant["target_platform"][0]
+            if target_platform != "noarch":
+                platform, arch = target_platform.split("-")
+                additional_config["platform"] = platform
+                additional_config["arch"] = arch
+
+        config = conda_build.config.Config(**additional_config)
+
+        specs = {}
+        for _variant_fname in variant:
+            specs[_variant_fname] = parse_config_file(_variant_fname, config)
+        variants = combine_specs(specs, log_output=False)
         metas = rattler_build_conda_compat.render.render(
             recipe_dir,
-            variant_config_files=variant,
+            variants=variants,
             finalize=False,
             bypass_env_check=True,
-            **additional_config,
+            config=config,
         )
     else:
         metas = conda_build.api.render(
