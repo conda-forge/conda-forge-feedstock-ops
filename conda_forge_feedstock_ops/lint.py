@@ -111,7 +111,8 @@ def _lint_local(feedstock_dir):
                 str(recipe_dir), conda_forge=True, return_hints=True
             )
             _error = False
-        except Exception:
+        except Exception as e:
+            logger.error("Error linting recipe %s", recipe, exc_info=e)
             _lints = []
             _hints = []
             _error = True
