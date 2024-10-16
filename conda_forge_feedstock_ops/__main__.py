@@ -147,6 +147,7 @@ def _execute_git_cmds_and_report(*, cmds, cwd, msg, ignore_stderr=False):
 
 def _rerender_feedstock(*, timeout):
     from conda_forge_feedstock_ops.os_utils import (
+        get_user_execute_permissions,
         reset_permissions_with_user_execute,
         sync_dirs,
     )
@@ -229,6 +230,8 @@ def _rerender_feedstock(*, timeout):
             )
 
         if msg is not None:
+            output_permissions = get_user_execute_permissions(fs_dir)
+
             _execute_git_cmds_and_report(
                 cmds=[
                     ["git", "add", "."],
@@ -251,8 +254,13 @@ def _rerender_feedstock(*, timeout):
             )
         else:
             patch = None
+            output_permissions = input_permissions
 
-        return {"commit_message": msg, "patch": patch}
+        return {
+            "commit_message": msg,
+            "patch": patch,
+            "permissions": output_permissions,
+        }
 
 
 def _parse_package_and_feedstock_names():

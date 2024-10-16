@@ -17,6 +17,7 @@ from conda_forge_feedstock_ops.os_utils import (
     chmod_plus_rwX,
     get_user_execute_permissions,
     pushd,
+    reset_permissions_with_user_execute,
     sync_dirs,
 )
 
@@ -120,6 +121,12 @@ def rerender_containerized(feedstock_dir, timeout=None):
                 fp.write(data["patch"])
             subprocess.run(
                 ["git", "apply", "--allow-empty", patch_file],
+                check=True,
+                cwd=feedstock_dir,
+            )
+            reset_permissions_with_user_execute(feedstock_dir, data["permissions"])
+            subprocess.run(
+                ["git", "add", "."],
                 check=True,
                 cwd=feedstock_dir,
             )
