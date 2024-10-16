@@ -207,7 +207,7 @@ def _rerender_feedstock(*, timeout):
             cwd=fs_dir,
             msg="git rev-parse HEAD failed for rerender prev commit",
             ignore_stderr=True,
-        )
+        ).strip()
 
         if timeout is not None:
             kwargs = {"timeout": timeout}
@@ -245,7 +245,7 @@ def _rerender_feedstock(*, timeout):
                 cwd=fs_dir,
                 msg="git rev-parse HEAD failed for rerender curr commit",
                 ignore_stderr=True,
-            )
+            ).strip()
             patch = _execute_git_cmds_and_report(
                 cmds=[["git", "diff", prev_commit + ".." + curr_commit]],
                 cwd=fs_dir,
