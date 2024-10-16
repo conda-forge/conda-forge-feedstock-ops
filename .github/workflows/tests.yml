@@ -63,10 +63,10 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: run tests
-        run: |
-          pytest -vvs tests
-
       - name: ensure cli runs
         run: |
           conda-forge-feedstock-ops-container --help
+
+      - name: run tests
+        run: |
+          pytest --log-cli-level=DEBUG -vvs tests

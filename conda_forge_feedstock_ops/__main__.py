@@ -235,7 +235,7 @@ def _rerender_feedstock(*, timeout):
             _execute_git_cmds_and_report(
                 cmds=[
                     ["git", "add", "."],
-                    ["git", "commit", "-m", msg],
+                    ["git", "commit", "-am", msg],
                 ],
                 cwd=fs_dir,
                 msg="git commit failed for rerender",
