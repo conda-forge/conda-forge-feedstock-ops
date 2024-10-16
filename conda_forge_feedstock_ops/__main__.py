@@ -113,31 +113,40 @@ def _run_bot_task(func, *, log_level, existing_feedstock_node_attrs, **kwargs):
         print(dumps(ret))
 
 
-def _execute_git_cmds_and_report(*, cmds, cwd, msg):
+def _execute_git_cmds_and_report(*, cmds, cwd, msg, ignore_stderr=False):
     logger = logging.getLogger("conda_forge_feedstock_ops.container")
 
     try:
         _output = ""
+        _output_stderr = ""
         for cmd in cmds:
             gitret = subprocess.run(
                 cmd,
                 cwd=cwd,
                 stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
+                stderr=subprocess.PIPE if ignore_stderr else subprocess.STDOUT,
                 text=True,
             )
             logger.debug("git command %r output: %s", cmd, gitret.stdout)
             _output += gitret.stdout
+            if ignore_stderr:
+                _output_stderr += gitret.stderr
             gitret.check_returncode()
     except Exception as e:
-        logger.error("%s\noutput: %s", msg, _output, exc_info=e)
+        logger.error(
+            "%s\noutput: %s\nstderr: %s",
+            msg,
+            _output,
+            _output_stderr if ignore_stderr else "<in output>",
+            exc_info=e,
+        )
         raise e
+
+    return _output
 
 
 def _rerender_feedstock(*, timeout):
     from conda_forge_feedstock_ops.os_utils import (
-        chmod_plus_rwX,
-        get_user_execute_permissions,
         reset_permissions_with_user_execute,
         sync_dirs,
     )
@@ -192,6 +201,13 @@ def _rerender_feedstock(*, timeout):
             msg="git init failed for rerender",
         )
 
+        prev_commit = _execute_git_cmds_and_report(
+            cmds=[["git", "rev-parse", "HEAD"]],
+            cwd=fs_dir,
+            msg="git rev-parse HEAD failed for rerender prev commit",
+            ignore_stderr=True,
+        )
+
         if timeout is not None:
             kwargs = {"timeout": timeout}
         else:
@@ -212,16 +228,31 @@ def _rerender_feedstock(*, timeout):
                 msg="git status failed for rerender",
             )
 
-        # if something changed, copy back the new feedstock
         if msg is not None:
-            output_permissions = get_user_execute_permissions(fs_dir)
-            sync_dirs(fs_dir, input_fs_dir, ignore_dot_git=True, update_git=False)
+            _execute_git_cmds_and_report(
+                cmds=[
+                    ["git", "add", "."],
+                    ["git", "commit", "-m", msg],
+                ],
+                cwd=fs_dir,
+                msg="git commit failed for rerender",
+            )
+            curr_commit = _execute_git_cmds_and_report(
+                cmds=[["git", "rev-parse", "HEAD"]],
+                cwd=fs_dir,
+                msg="git rev-parse HEAD failed for rerender curr commit",
+                ignore_stderr=True,
+            )
+            patch = _execute_git_cmds_and_report(
+                cmds=[["git", "diff", prev_commit, curr_commit]],
+                cwd=fs_dir,
+                msg="git diff failed for rerender",
+                ignore_stderr=True,
+            )
         else:
-            output_permissions = input_permissions
+            patch = None
 
-        chmod_plus_rwX(input_fs_dir, recursive=True, skip_on_error=True)
-
-        return {"commit_message": msg, "permissions": output_permissions}
+        return {"commit_message": msg, "patch": patch}
 
 
 def _parse_package_and_feedstock_names():

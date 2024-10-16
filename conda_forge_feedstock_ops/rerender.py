@@ -17,7 +17,6 @@ from conda_forge_feedstock_ops.os_utils import (
     chmod_plus_rwX,
     get_user_execute_permissions,
     pushd,
-    reset_permissions_with_user_execute,
     sync_dirs,
 )
 
@@ -113,14 +112,17 @@ def rerender_containerized(feedstock_dir, timeout=None):
             mount_dir=tmpdir,
         )
 
-        if data["commit_message"] is not None:
-            sync_dirs(
-                tmp_feedstock_dir,
-                feedstock_dir,
-                ignore_dot_git=True,
-                update_git=True,
+        if data["commit_message"] is not None and data["patch"] is not None:
+            patch_file = os.path.join(
+                tmpdir, f"rerender-diff-{os.path.basename(feedstock_dir)}.patch"
             )
-            reset_permissions_with_user_execute(feedstock_dir, data["permissions"])
+            with open(patch_file, "w") as fp:
+                fp.write(data["patch"])
+            subprocess.run(
+                ["git", "apply", "--allow-empty", patch_file],
+                check=True,
+                cwd=feedstock_dir,
+            )
 
         # When tempfile removes tempdir, it tries to reset permissions on subdirs.
         # This causes a permission error since the subdirs were made by the user
