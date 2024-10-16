@@ -247,7 +247,7 @@ def _rerender_feedstock(*, timeout):
                 ignore_stderr=True,
             )
             patch = _execute_git_cmds_and_report(
-                cmds=[["git", "diff", prev_commit, curr_commit]],
+                cmds=[["git", "diff", prev_commit + ".." + curr_commit]],
                 cwd=fs_dir,
                 msg="git diff failed for rerender",
                 ignore_stderr=True,
