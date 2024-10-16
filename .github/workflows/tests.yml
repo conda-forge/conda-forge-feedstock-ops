@@ -60,8 +60,6 @@ jobs:
           push: false
           load: true
           tags: conda-forge-feedstock-ops:test
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
       - name: ensure cli runs
         run: |
@@ -69,4 +67,4 @@ jobs:
 
       - name: run tests
         run: |
-          pytest --log-cli-level=DEBUG -vvs tests
+          pytest -vvs tests
