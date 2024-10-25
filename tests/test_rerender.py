@@ -281,6 +281,10 @@ def test_rerender_containerized_permissions(use_containers):
                 print(
                     f"\n\ncloned permissions for build-locally.py: {orig_perms_bl:#o}\n\n"
                 )
+                orig_perms_bs = os.stat(".scripts/build_steps.sh").st_mode
+                print(
+                    f"\n\ncloned permissions for .scripts/build_steps.sh: {orig_perms_bs:#o}\n\n"
+                )
                 orig_exec = get_user_execute_permissions(".")
 
             local_msg = rerender_local(
