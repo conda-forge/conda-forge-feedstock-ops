@@ -281,6 +281,10 @@ def test_rerender_containerized_permissions(use_containers):
                 print(
                     f"\n\ncloned permissions for build-locally.py: {orig_perms_bl:#o}\n\n"
                 )
+                orig_perms_bs = os.stat(".scripts/build_steps.sh").st_mode
+                print(
+                    f"\n\ncloned permissions for .scripts/build_steps.sh: {orig_perms_bs:#o}\n\n"
+                )
                 orig_exec = get_user_execute_permissions(".")
 
             local_msg = rerender_local(
@@ -303,10 +307,15 @@ def test_rerender_containerized_permissions(use_containers):
                 print(
                     f"\n\ninput permissions for build-locally.py: {orig_perms_bl:#o}\n\n"
                 )
+                orig_perms_bs = os.stat(".scripts/build_steps.sh").st_mode
+                print(
+                    f"\n\ninput permissions for .scripts/build_steps.sh: {orig_perms_bs:#o}\n\n"
+                )
                 local_rerend_exec = get_user_execute_permissions(".")
 
                 cmds = [
-                    ["chmod", "655", "build-locally.py"],
+                    ["chmod", "600", "build-locally.py"],
+                    ["git", "rm", "-f", ".scripts/build_steps.sh"],
                     ["git", "add", "build-locally.py"],
                     ["git", "config", "user.email", "conda@conda.conda"],
                     ["git", "config", "user.name", "conda c. conda"],
@@ -326,6 +335,10 @@ def test_rerender_containerized_permissions(use_containers):
             with pushd("conda-forge-feedstock-check-solvable-feedstock"):
                 perms_bl = os.stat("build-locally.py").st_mode
                 print(f"\n\nfinal permissions for build-locally.py: {perms_bl:#o}\n\n")
+                perms_bs = os.stat(".scripts/build_steps.sh").st_mode
+                print(
+                    f"\n\nfinal permissions for .scripts/build_steps.sh: {perms_bs:#o}\n\n"
+                )
                 cont_rerend_exec = get_user_execute_permissions(".")
 
             assert orig_exec == local_rerend_exec
