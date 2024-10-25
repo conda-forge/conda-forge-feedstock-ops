@@ -124,7 +124,7 @@ def rerender_containerized(feedstock_dir, timeout=None):
                 check=True,
                 cwd=feedstock_dir,
             )
-            logger.warning("rerender patch:\n%s", data["patch"])  # FIXME
+            print("rerender patch:\n%s", data["patch"], flush=True)  # FIXME
             reset_permissions_with_user_execute(feedstock_dir, data["permissions"])
             subprocess.run(
                 ["git", "add", "."],
