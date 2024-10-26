@@ -78,7 +78,7 @@ def sync_dirs(
     dest_dir,
     ignore_dot_git=True,
     update_git=True,
-    sync_permissions=False,
+    sync_stat_metadata=False,
 ):
     """Sync the contents of source_dir to dest_dir.
 
@@ -95,9 +95,9 @@ def sync_dirs(
         Ignore .git directories, by default True
     update_git : bool, optional
         Update the git index via `git add` and `git rm`, by default True
-    sync_permissions : bool, optional
-        If True, synchronize the file/directory permissions in addition to
-        the contents. Default is False.
+    sync_stat_metadata : bool, optional
+        If True, synchronize the file/directory permissions, access/modification
+        times, and flags in addition to the contents. Default is False.
     """
     os.makedirs(dest_dir, exist_ok=True)
 
@@ -146,8 +146,8 @@ def sync_dirs(
                     cwd=dest_dir,
                 )
 
-        if sync_permissions:
-            shutil.copymode(src_fname, dest_fname)
+        if sync_stat_metadata:
+            shutil.copystat(src_fname, dest_fname)
 
 
 def _chmod_plus_rw(file_or_dir, skip_on_error=False):
