@@ -234,7 +234,7 @@ def _rerender_feedstock(*, timeout):
 
             _execute_git_cmds_and_report(
                 cmds=[
-                    ["git", "add", "."],
+                    ["git", "add", "-f", "."],
                     ["git", "commit", "-am", msg],
                 ],
                 cwd=fs_dir,
