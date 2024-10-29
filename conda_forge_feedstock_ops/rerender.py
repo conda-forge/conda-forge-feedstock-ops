@@ -126,7 +126,7 @@ def rerender_containerized(feedstock_dir, timeout=None):
             )
             reset_permissions_with_user_execute(feedstock_dir, data["permissions"])
             subprocess.run(
-                ["git", "add", "."],
+                ["git", "add", "-f", "."],
                 check=True,
                 cwd=feedstock_dir,
             )
