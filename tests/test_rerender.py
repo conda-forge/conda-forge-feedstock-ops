@@ -148,6 +148,8 @@ def test_rerender_containerized_same_as_local(use_containers, capfd):
                 assert msg.startswith(
                     "MNT:"
                 ), f"msg: {msg}\nout: {captured.out}\nerr: {captured.err}"
+                with pushd("conda-forge-feedstock-check-solvable-feedstock"):
+                    assert os.path.exists(".azure-pipelines/azure-pipelines-linux.yml")
             else:
                 assert (
                     msg is None
@@ -186,6 +188,9 @@ def test_rerender_containerized_same_as_local(use_containers, capfd):
             finally:
                 local_captured = capfd.readouterr()
                 print(f"out: {local_captured.out}\nerr: {local_captured.err}")
+
+            with pushd("conda-forge-feedstock-check-solvable-feedstock"):
+                assert os.path.exists(".azure-pipelines/azure-pipelines-linux.yml")
 
         assert (
             msg.split("conda-forge-pinning")[1]
