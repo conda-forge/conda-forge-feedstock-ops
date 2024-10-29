@@ -26,6 +26,7 @@ def test_rerender_local_stderr(capfd):
             cmds = [
                 ["git", "rm", "-f", ".gitignore"],
                 ["git", "rm", "-rf", ".scripts"],
+                ["git", "rm", "-f", ".azure-pipelines/azure-pipelines-linux.yml"],
                 ["git", "config", "user.email", "conda@conda.conda"],
                 ["git", "config", "user.name", "conda c. conda"],
                 ["git", "commit", "-m", "test commit"],
@@ -65,6 +66,7 @@ def test_rerender_local_git_staged():
             cmds = [
                 ["git", "rm", "-f", ".gitignore"],
                 ["git", "rm", "-rf", ".scripts"],
+                ["git", "rm", "-f", ".azure-pipelines/azure-pipelines-linux.yml"],
                 ["git", "config", "user.email", "conda@conda.conda"],
                 ["git", "config", "user.name", "conda c. conda"],
                 ["git", "commit", "-m", "test commit"],
@@ -118,6 +120,7 @@ def test_rerender_containerized_same_as_local(use_containers, capfd):
                 cmds = [
                     ["git", "rm", "-f", ".gitignore"],
                     ["git", "rm", "-rf", ".scripts"],
+                    ["git", "rm", "-f", ".azure-pipelines/azure-pipelines-linux.yml"],
                     ["git", "config", "user.email", "conda@conda.conda"],
                     ["git", "config", "user.name", "conda c. conda"],
                     ["git", "commit", "-m", "test commit"],
@@ -163,6 +166,7 @@ def test_rerender_containerized_same_as_local(use_containers, capfd):
                 cmds = [
                     ["git", "rm", "-f", ".gitignore"],
                     ["git", "rm", "-rf", ".scripts"],
+                    ["git", "rm", "-f", ".azure-pipelines/azure-pipelines-linux.yml"],
                     ["git", "config", "user.email", "conda@conda.conda"],
                     ["git", "config", "user.name", "conda c. conda"],
                     ["git", "commit", "-m", "test commit"],
@@ -231,6 +235,7 @@ def test_rerender_containerized_empty(use_containers):
                 cmds = [
                     ["git", "rm", "-f", ".gitignore"],
                     ["git", "rm", "-rf", ".scripts"],
+                    ["git", "rm", "-f", ".azure-pipelines/azure-pipelines-linux.yml"],
                     ["git", "config", "user.email", "conda@conda.conda"],
                     ["git", "config", "user.name", "conda c. conda"],
                     ["git", "commit", "-m", "test commit"],
