@@ -3,7 +3,8 @@ import logging
 import os
 import pprint
 import subprocess
-from typing import Callable, Iterable, Optional
+from collections.abc import Iterable
+from typing import Callable, Optional
 
 from ._version import __version__
 
