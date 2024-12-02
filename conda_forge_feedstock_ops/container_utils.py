@@ -179,7 +179,11 @@ def run_container_operation(
         )
 
     if "error" in ret:
-        if "(" in ret["error"] and ")" in ret["error"]:
+        if (
+            "(" in ret["error"]
+            and ")" in ret["error"]
+            and len(ret["error"].split("(", maxsplit=1)) > 1
+        ):
             ret_str = (
                 ret["error"]
                 .split("(", maxsplit=1)[1]
@@ -194,7 +198,7 @@ def run_container_operation(
                 .encode("raw_unicode_escape")
                 .decode("unicode_escape")
             )
-        elif ":" in ret["error"]:
+        elif ":" in ret["error"] and len(ret["error"].split(":", maxsplit=1)) > 1:
             ret_str = (
                 ret["error"]
                 .split(":", maxsplit=1)[1]
