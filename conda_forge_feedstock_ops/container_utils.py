@@ -179,15 +179,42 @@ def run_container_operation(
         )
 
     if "error" in ret:
-        ret_str = (
-            ret["error"]
-            .split("(", maxsplit=1)[1]
-            .rsplit(")", maxsplit=1)[0]
-            .encode("raw_unicode_escape")
-            .decode("unicode_escape")
-        )
+        if "(" in ret["error"] and ")" in ret["error"]:
+            ret_str = (
+                ret["error"]
+                .split("(", maxsplit=1)[1]
+                .rsplit(")", maxsplit=1)[0]
+                .encode("raw_unicode_escape")
+                .decode("unicode_escape")
+            )
+            ename = (
+                ret["error"]
+                .split("(")[0]
+                .strip()
+                .encode("raw_unicode_escape")
+                .decode("unicode_escape")
+            )
+        elif ":" in ret["error"]:
+            ret_str = (
+                ret["error"]
+                .split(":", maxsplit=1)[1]
+                .strip()
+                .encode("raw_unicode_escape")
+                .decode("unicode_escape")
+            )
+            ename = (
+                ret["error"]
+                .split(":")[0]
+                .strip()
+                .encode("raw_unicode_escape")
+                .decode("unicode_escape")
+            )
+        else:
+            ret_str = ret["error"]
+            ename = "<could not be parsed"
+
         raise ContainerRuntimeError(
-            error=f"Error running '{' '.join(args)}' in container - error {ret['error'].split('(')[0]} raised:\n{ret_str}",
+            error=f"Error running '{' '.join(args)}' in container - error {ename} raised:\n{ret_str}",
             args=args,
             cmd=pprint.pformat(cmd),
             returncode=res.returncode,
