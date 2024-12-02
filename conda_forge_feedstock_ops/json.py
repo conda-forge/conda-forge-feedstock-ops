@@ -3,7 +3,6 @@ from collections.abc import Callable
 from typing import (
     IO,
     Any,
-    Set,
 )
 
 import rapidjson as json
@@ -13,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 def default(obj: Any) -> Any:
     """For custom object serialization."""
-    if isinstance(obj, Set):
+    if isinstance(obj, set):
         return {"__set__": True, "elements": sorted(obj)}
     raise TypeError(repr(obj) + " is not JSON serializable")
 
