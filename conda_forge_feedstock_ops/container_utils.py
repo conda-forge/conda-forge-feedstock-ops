@@ -32,6 +32,7 @@ For podman, use http://host.containers.internal:8080.
 For GitHub Actions, use http://172.17.0.1:8080, see https://stackoverflow.com/a/65505308
 """
 
+
 def get_default_container_name():
     """Get the default container name for feedstock ops.
 
