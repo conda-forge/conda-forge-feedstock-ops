@@ -12,6 +12,14 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_CONTAINER_TMPFS_SIZE_MB = 6000
 
+CONTAINER_PROXY_MODE = os.environ.get(
+    "CF_FEEDSTOCK_OPS_CONTAINER_PROXY_MODE", "false"
+).lower() in ("yes", "true", "t", "1")
+"""
+Whether to use a proxy that is locally configured for all requests inside the container.
+Set the environment variable `CF_FEEDSTOCK_OPS_CONTAINER_PROXY_MODE` to 'true' to enable this feature.
+"""
+
 
 def get_default_container_name():
     """Get the default container name for feedstock ops.
@@ -97,6 +105,28 @@ def get_default_log_level_args(logger):
     ]
 
 
+def _get_proxy_mode_container_args():
+    if not CONTAINER_PROXY_MODE:
+        return []
+    assert os.environ["SSL_CERT_FILE"] == os.environ["REQUESTS_CA_BUNDLE"]
+    return [
+        "-e",
+        f"http_proxy={os.environ['http_proxy']}",
+        "-e",
+        f"https_proxy={os.environ['https_proxy']}",
+        "-e",
+        f"no_proxy={os.environ.get('no_proxy', '')}",
+        "-e",
+        "SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt",
+        "-e",
+        "REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt",
+        "--network",
+        "host",
+        "-v",
+        f"{os.environ['SSL_CERT_FILE']}:/etc/ssl/certs/ca-certificates.crt:ro",
+    ]
+
+
 def run_container_operation(
     args: Iterable[str],
     json_loads: Callable = json.loads,
@@ -146,6 +176,7 @@ def run_container_operation(
     cmd = [
         *get_default_container_run_args(tmpfs_size_mb=tmpfs_size_mb),
         *mnt_args,
+        *_get_proxy_mode_container_args(),
         *extra_container_args,
         get_default_container_name(),
         *args,
