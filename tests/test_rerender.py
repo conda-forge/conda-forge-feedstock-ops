@@ -47,9 +47,9 @@ def test_rerender_local_stderr(capfd):
 
         assert "git commit -m " in captured.err
         assert msg is not None, f"msg: {msg}\nout: {captured.out}\nerr: {captured.err}"
-        assert msg.startswith(
-            "MNT:"
-        ), f"msg: {msg}\nout: {captured.out}\nerr: {captured.err}"
+        assert msg.startswith("MNT:"), (
+            f"msg: {msg}\nout: {captured.out}\nerr: {captured.err}"
+        )
 
 
 def test_rerender_local_git_staged():
@@ -142,18 +142,18 @@ def test_rerender_containerized_same_as_local(use_containers, capfd):
                 print(f"out: {captured.out}\nerr: {captured.err}")
 
             if "git commit -m " in captured.err:
-                assert (
-                    msg is not None
-                ), f"msg: {msg}\nout: {captured.out}\nerr: {captured.err}"
-                assert msg.startswith(
-                    "MNT:"
-                ), f"msg: {msg}\nout: {captured.out}\nerr: {captured.err}"
+                assert msg is not None, (
+                    f"msg: {msg}\nout: {captured.out}\nerr: {captured.err}"
+                )
+                assert msg.startswith("MNT:"), (
+                    f"msg: {msg}\nout: {captured.out}\nerr: {captured.err}"
+                )
                 with pushd("conda-forge-feedstock-check-solvable-feedstock"):
                     assert os.path.exists(".azure-pipelines/azure-pipelines-linux.yml")
             else:
-                assert (
-                    msg is None
-                ), f"msg: {msg}\nout: {captured.out}\nerr: {captured.err}"
+                assert msg is None, (
+                    f"msg: {msg}\nout: {captured.out}\nerr: {captured.err}"
+                )
 
         with pushd(tmpdir_local):
             subprocess.run(
@@ -209,9 +209,9 @@ def test_rerender_containerized_same_as_local(use_containers, capfd):
         rel_local_fnames = {
             os.path.relpath(fname, tmpdir_local) for fname in local_fnames
         }
-        assert (
-            rel_cont_fnames == rel_local_fnames
-        ), f"{rel_cont_fnames} != {rel_local_fnames}"
+        assert rel_cont_fnames == rel_local_fnames, (
+            f"{rel_cont_fnames} != {rel_local_fnames}"
+        )
 
         for cfname in cont_fnames:
             lfname = os.path.join(tmpdir_local, os.path.relpath(cfname, tmpdir_cont))
