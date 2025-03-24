@@ -6,49 +6,15 @@ import subprocess
 from collections.abc import Iterable
 from typing import Callable, Optional
 
-from ._version import __version__
+from conda_forge_feedstock_ops.settings import FeedstockOpsSettings
 
 logger = logging.getLogger(__name__)
 
 DEFAULT_CONTAINER_TMPFS_SIZE_MB = 6000
 
-CONTAINER_PROXY_MODE = os.environ.get(
-    "CF_FEEDSTOCK_OPS_CONTAINER_PROXY_MODE", "false"
-).lower() in ("yes", "true", "t", "1")
-"""
-Whether to use a proxy that is locally configured for all requests inside the container.
-Set the environment variable `CF_FEEDSTOCK_OPS_CONTAINER_PROXY_MODE` to 'true' to enable this feature.
-"""
-
-PROXY_IN_CONTAINER = os.environ.get(
-    "CF_FEEDSTOCK_OPS_PROXY_IN_CONTAINER", "http://host.docker.internal:8080"
-)
-"""
-The hostname of the proxy to use in the container.
-The default value of 'http://host.docker.internal:8080' is the default value for Docker Desktop on Windows and macOS.
-It also works for OrbStack.
-
-For podman, use http://host.containers.internal:8080.
-For GitHub Actions, use http://172.17.0.1:8080, see https://stackoverflow.com/a/65505308
-"""
-
 
 def get_default_container_name():
-    """Get the default container name for feedstock ops.
-
-    The image is stored at `condaforge/conda-forge-feedstock-ops`.
-
-    If the environment variable `CF_FEEDSTOCK_OPS_CONTAINER_NAME` is set, then that name is used.
-
-    If the environment variable `CF_FEEDSTOCK_OPS_CONTAINER_TAG` is set, then that tag is pulled.
-    Otherwise, we pull the tag `__version__`.
-    """
-    cname = (
-        f"{os.environ.get('CF_FEEDSTOCK_OPS_CONTAINER_NAME', 'condaforge/conda-forge-feedstock-ops')}"
-        + f":{os.environ.get('CF_FEEDSTOCK_OPS_CONTAINER_TAG', __version__)}"
-    )
-
-    return cname
+    return FeedstockOpsSettings().container_full_name
 
 
 class ContainerRuntimeError(RuntimeError):
@@ -118,14 +84,16 @@ def get_default_log_level_args(logger):
 
 
 def _get_proxy_mode_container_args():
-    if not CONTAINER_PROXY_MODE:
+    settings = FeedstockOpsSettings()
+    if not settings.container_proxy_mode:
         return []
+
     assert os.environ["SSL_CERT_FILE"] == os.environ["REQUESTS_CA_BUNDLE"]
     return [
         "-e",
-        f"http_proxy={PROXY_IN_CONTAINER}",
+        f"http_proxy={settings.proxy_in_container}",
         "-e",
-        f"https_proxy={PROXY_IN_CONTAINER}",
+        f"https_proxy={settings.proxy_in_container}",
         "-e",
         f"no_proxy={os.environ.get('no_proxy', '')}",
         "-e",
@@ -290,9 +258,7 @@ def should_use_container(use_container: Optional[bool] = None):
     bool
         Whether to use a container.
     """
-    in_container = (
-        os.environ.get("CF_FEEDSTOCK_OPS_IN_CONTAINER", "false").lower() == "true"
-    )
+    in_container = FeedstockOpsSettings().in_container
     if use_container is None:
         use_container = not in_container
 
