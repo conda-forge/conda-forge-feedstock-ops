@@ -21,6 +21,10 @@ from conda_forge_feedstock_ops.rerender import rerender
 commit_msg = rerender(path_to_feedstock)
 ```
 
+## Settings
+
+You can customize the behavior of the package by setting environment variables as described in [settings.py](conda_forge_feedstock_ops/settings.py).
+
 ## Container Setup
 
 This package works by running commands inside of a container on-the-fly in order to

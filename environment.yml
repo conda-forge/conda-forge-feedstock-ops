@@ -9,6 +9,7 @@ dependencies:
   - click
   - conda-build >=3.27
   - conda-smithy >=3.40
+  - pydantic-settings >=2.8.1,<3.0.0
   - python-rapidjson
   - pyyaml
   - rattler-build-conda-compat >=0.0.2,<2.0.0a0

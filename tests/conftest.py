@@ -99,3 +99,10 @@ def use_containers():
         os.environ.pop("CF_FEEDSTOCK_OPS_IN_CONTAINER", None)
     else:
         os.environ["CF_FEEDSTOCK_OPS_IN_CONTAINER"] = old_in_container
+
+
+@pytest.fixture
+def temporary_env_variables():
+    old_env = os.environ.copy()
+    yield
+    os.environ = old_env
