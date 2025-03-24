@@ -105,4 +105,5 @@ def use_containers():
 def temporary_env_variables():
     old_env = os.environ.copy()
     yield
-    os.environ = old_env
+    os.environ.clear()
+    os.environ.update(old_env)
