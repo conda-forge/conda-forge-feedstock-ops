@@ -13,6 +13,10 @@ logger = logging.getLogger(__name__)
 DEFAULT_CONTAINER_TMPFS_SIZE_MB = 6000
 
 
+def get_default_container_name():
+    return FeedstockOpsSettings().container_full_name
+
+
 class ContainerRuntimeError(RuntimeError):
     """An error raised when running a container fails."""
 
@@ -154,7 +158,7 @@ def run_container_operation(
         *mnt_args,
         *_get_proxy_mode_container_args(),
         *extra_container_args,
-        FeedstockOpsSettings().container_full_name,
+        get_default_container_name(),
         *args,
     ]
     res = subprocess.run(
