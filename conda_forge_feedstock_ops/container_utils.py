@@ -6,7 +6,7 @@ import subprocess
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
-from typing import Callable, Optional
+from typing import Callable, Optional, Self
 
 from conda_forge_feedstock_ops import CF_FEEDSTOCK_OPS_DIR
 from conda_forge_feedstock_ops.settings import FeedstockOpsSettings
@@ -126,7 +126,7 @@ class Mount:
     """
 
     @classmethod
-    def to_cf_feedstock_ops_dir(cls, host_path: Path, read_only: bool = True):
+    def to_cf_feedstock_ops_dir(cls, host_path: Path, read_only: bool = True) -> Self:
         """
         Creates a new mount to the default CF_FEEDSTOCK_OPS_DIR.
         """
