@@ -15,6 +15,7 @@ from rattler_build_conda_compat.render import MetaData as RattlerBuildMetaData
 from yaml import safe_load
 
 from conda_forge_feedstock_ops.container_utils import (
+    Mount,
     get_default_log_level_args,
     run_container_operation,
     should_use_container,
@@ -82,8 +83,7 @@ def _parse_package_and_feedstock_names_containerized(feedstock_dir):
 
         data = run_container_operation(
             args,
-            mount_readonly=True,
-            mount_dir=tmpdir,
+            mounts=[Mount.to_cf_feedstock_ops_dir(tmpdir, read_only=True)],
             json_loads=loads,
         )
 

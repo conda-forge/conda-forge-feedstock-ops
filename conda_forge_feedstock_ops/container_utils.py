@@ -4,8 +4,11 @@ import os
 import pprint
 import subprocess
 from collections.abc import Iterable
+from dataclasses import dataclass
+from pathlib import Path, PurePosixPath
 from typing import Callable, Optional
 
+from conda_forge_feedstock_ops import CF_FEEDSTOCK_OPS_DIR
 from conda_forge_feedstock_ops.settings import FeedstockOpsSettings
 
 logger = logging.getLogger(__name__)
@@ -107,13 +110,51 @@ def _get_proxy_mode_container_args():
     ]
 
 
+@dataclass
+class Mount:
+    host_path: Path
+    """
+    The path on the host to mount.
+    """
+    container_path: PurePosixPath
+    """
+    The path in the container to mount to.
+    """
+    read_only: bool = True
+    """
+    Whether to mount the path as read-only.
+    """
+
+    @classmethod
+    def to_cf_feedstock_ops_dir(cls, host_path: Path, read_only: bool = True):
+        """
+        Creates a new mount to the default CF_FEEDSTOCK_OPS_DIR.
+        """
+        return cls(
+            host_path=host_path,
+            container_path=CF_FEEDSTOCK_OPS_DIR,
+            read_only=read_only,
+        )
+
+    def to_mount_args(self) -> list[str]:
+        """
+        Get the corresponding mount arguments for the Docker CLI.
+        """
+        args = [
+            "--mount",
+            f"type=bind,source={self.host_path},destination={self.container_path}",
+        ]
+        if self.read_only:
+            args[-1] += ",readonly"
+        return args
+
+
 def run_container_operation(
     args: Iterable[str],
     json_loads: Callable = json.loads,
     tmpfs_size_mb: int = DEFAULT_CONTAINER_TMPFS_SIZE_MB,
-    input: Optional[str] = None,
-    mount_dir: Optional[str] = None,
-    mount_readonly: bool = True,
+    stdin_input: Optional[str] = None,
+    mounts: Iterable[Mount] = (),
     extra_container_args: Optional[Iterable[str]] = None,
 ):
     """Run a feedstock operation in a container.
@@ -126,12 +167,10 @@ def run_container_operation(
         The function to use to load JSON to a string, by default `json.loads`.
     tmpfs_size_mb
         The size of the tmpfs in MB, by default 10.
-    input
+    stdin_input
         The input to pass to the container, by default None.
-    mount_dir
-        The directory to mount to the container at `/cf_feedstock_ops_dir`, by default None.
-    mount_readonly
-        Whether to mount the directory as read-only, by default True.
+    mounts
+        Bind mounts that should be added to the container, by default none.
     extra_container_args
         Extra arguments to pass to the container, by default None.
 
@@ -140,17 +179,7 @@ def run_container_operation(
     data : dict-like
         The result of the operation.
     """
-    if mount_dir is not None:
-        mount_dir = os.path.abspath(mount_dir)
-        mnt_args = [
-            "--mount",
-            f"type=bind,source={mount_dir},destination=/cf_feedstock_ops_dir",
-        ]
-        if mount_readonly:
-            mnt_args[-1] += ",readonly"
-    else:
-        mnt_args = []
-
+    mnt_args = [mount.to_mount_args() for mount in mounts]
     extra_container_args = extra_container_args or []
 
     cmd = [
@@ -165,7 +194,7 @@ def run_container_operation(
         cmd,
         stdout=subprocess.PIPE,
         text=True,
-        input=input,
+        input=stdin_input,
     )
     # we handle this ourselves to customize the error message
     if res.returncode != 0:
