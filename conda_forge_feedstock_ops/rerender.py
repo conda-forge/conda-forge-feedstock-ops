@@ -6,6 +6,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from pathlib import Path
 from threading import Event, Thread
 
 from conda_forge_feedstock_ops.container_utils import (
@@ -56,7 +57,7 @@ def rerender(feedstock_dir, timeout=None, use_container=None):
         )
 
 
-def rerender_containerized(feedstock_dir, timeout=None):
+def rerender_containerized(feedstock_dir: str, timeout=None):
     """Rerender a feedstock.
 
     **This function runs the rerender in a container.**
@@ -81,10 +82,11 @@ def rerender_containerized(feedstock_dir, timeout=None):
     if timeout is not None:
         args += ["--timeout", str(timeout)]
 
-    with tempfile.TemporaryDirectory() as tmpdir:
-        tmp_feedstock_dir = os.path.join(tmpdir, os.path.basename(feedstock_dir))
+    with tempfile.TemporaryDirectory() as tmpdir_str:
+        tmpdir = Path(tmpdir_str)
+        tmp_feedstock_dir = tmpdir / os.path.basename(feedstock_dir)
         sync_dirs(
-            feedstock_dir, tmp_feedstock_dir, ignore_dot_git=True, update_git=False
+            feedstock_dir, str(tmp_feedstock_dir), ignore_dot_git=True, update_git=False
         )
 
         perms = get_user_execute_permissions(feedstock_dir)
@@ -94,7 +96,7 @@ def rerender_containerized(feedstock_dir, timeout=None):
         ) as f:
             json.dump(perms, f)
 
-        chmod_plus_rwX(tmpdir, recursive=True)
+        chmod_plus_rwX(str(tmpdir), recursive=True)
 
         logger.debug(
             "host feedstock dir %s: %r",

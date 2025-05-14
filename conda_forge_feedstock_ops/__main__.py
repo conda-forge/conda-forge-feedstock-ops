@@ -13,7 +13,6 @@ These operations return their info by printing a JSON blob to stdout.
 """
 
 import copy
-import glob
 import json
 import logging
 import os
@@ -23,8 +22,15 @@ import sys
 import tempfile
 import traceback
 from contextlib import contextmanager, redirect_stdout
+from pathlib import PosixPath
 
 import click
+
+from conda_forge_feedstock_ops import CF_FEEDSTOCK_OPS_DIR as PURE_CF_FEEDSTOCK_OPS_DIR
+
+# This file is executed inside the container, so we convert to PosixPath
+# to allow filesystem operations (only possible on Linux).
+CF_FEEDSTOCK_OPS_DIR = PosixPath(PURE_CF_FEEDSTOCK_OPS_DIR)
 
 existing_feedstock_node_attrs_option = click.option(
     "--existing-feedstock-node-attrs",
@@ -156,28 +162,27 @@ def _rerender_feedstock(*, timeout):
     logger = logging.getLogger("conda_forge_feedstock_ops.container")
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        input_fs_dir = glob.glob("/cf_feedstock_ops_dir/*-feedstock")
-        assert len(input_fs_dir) == 1, f"expected one feedstock, got {input_fs_dir}"
-        input_fs_dir = input_fs_dir[0]
+        input_fs_dirs = list(CF_FEEDSTOCK_OPS_DIR.glob("*-feedstock"))
+        assert len(input_fs_dirs) == 1, f"expected one feedstock, got {input_fs_dirs}"
+        input_fs_dir = input_fs_dirs[0]
         logger.debug(
             "input container feedstock dir %s: %s",
             input_fs_dir,
             os.listdir(input_fs_dir),
         )
-        input_permissions = os.path.join(
-            "/cf_feedstock_ops_dir",
-            f"permissions-{os.path.basename(input_fs_dir)}.json",
+        input_permissions = (
+            CF_FEEDSTOCK_OPS_DIR / f"permissions-{input_fs_dir.name}.json"
         )
         with open(input_permissions) as f:
-            input_permissions = json.load(f)
+            input_permissions_dict = json.load(f)
 
         fs_dir = os.path.join(tmpdir, os.path.basename(input_fs_dir))
-        sync_dirs(input_fs_dir, fs_dir, ignore_dot_git=True, update_git=False)
+        sync_dirs(str(input_fs_dir), fs_dir, ignore_dot_git=True, update_git=False)
         logger.debug(
             "copied container feedstock dir %s: %s", fs_dir, os.listdir(fs_dir)
         )
 
-        reset_permissions_with_user_execute(fs_dir, input_permissions)
+        reset_permissions_with_user_execute(fs_dir, input_permissions_dict)
 
         has_gitignore = os.path.exists(os.path.join(fs_dir, ".gitignore"))
         if has_gitignore:
@@ -230,7 +235,7 @@ def _rerender_feedstock(*, timeout):
             )
 
         if msg is not None:
-            output_permissions = get_user_execute_permissions(fs_dir)
+            output_permissions_dict = get_user_execute_permissions(fs_dir)
 
             _execute_git_cmds_and_report(
                 cmds=[
@@ -254,12 +259,12 @@ def _rerender_feedstock(*, timeout):
             )
         else:
             patch = None
-            output_permissions = input_permissions
+            output_permissions_dict = input_permissions_dict
 
         return {
             "commit_message": msg,
             "patch": patch,
-            "permissions": output_permissions,
+            "permissions": output_permissions_dict,
         }
 
 
@@ -272,9 +277,9 @@ def _parse_package_and_feedstock_names():
     logger = logging.getLogger("conda_forge_feedstock_ops.container")
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        input_fs_dir = glob.glob("/cf_feedstock_ops_dir/*-feedstock")
-        assert len(input_fs_dir) == 1, f"expected one feedstock, got {input_fs_dir}"
-        input_fs_dir = input_fs_dir[0]
+        input_fs_dirs = list(CF_FEEDSTOCK_OPS_DIR.glob("*-feedstock"))
+        assert len(input_fs_dirs) == 1, f"expected one feedstock, got {input_fs_dirs}"
+        input_fs_dir = input_fs_dirs[0]
         logger.debug(
             "input container feedstock dir %s: %s",
             input_fs_dir,
@@ -282,7 +287,7 @@ def _parse_package_and_feedstock_names():
         )
 
         fs_dir = os.path.join(tmpdir, os.path.basename(input_fs_dir))
-        sync_dirs(input_fs_dir, fs_dir, ignore_dot_git=True, update_git=False)
+        sync_dirs(str(input_fs_dir), fs_dir, ignore_dot_git=True, update_git=False)
         logger.debug(
             "copied container feedstock dir %s: %s", fs_dir, os.listdir(fs_dir)
         )
@@ -305,15 +310,15 @@ def _lint():
     logger = logging.getLogger("conda_forge_feedstock_ops.container")
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        input_fs_dir = "/cf_feedstock_ops_dir"
+        input_fs_dir = CF_FEEDSTOCK_OPS_DIR
         logger.debug(
             "input container feedstock dir %s: %s",
             input_fs_dir,
-            os.listdir(input_fs_dir),
+            [path.name for path in input_fs_dir.iterdir()],
         )
 
         fs_dir = os.path.join(tmpdir, os.path.basename(input_fs_dir))
-        sync_dirs(input_fs_dir, fs_dir, ignore_dot_git=True, update_git=False)
+        sync_dirs(str(input_fs_dir), fs_dir, ignore_dot_git=True, update_git=False)
         logger.debug(
             "copied container feedstock dir %s: %s", fs_dir, os.listdir(fs_dir)
         )

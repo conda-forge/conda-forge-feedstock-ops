@@ -53,9 +53,10 @@ def _lint_containerized(feedstock_dir):
         "lint",
     ] + get_default_log_level_args(logger)
 
-    with tempfile.TemporaryDirectory() as tmpdir:
-        sync_dirs(feedstock_dir, tmpdir, ignore_dot_git=True, update_git=False)
-        chmod_plus_rwX(tmpdir, recursive=True)
+    with tempfile.TemporaryDirectory() as tmpdir_str:
+        tmpdir = Path(tmpdir_str)
+        sync_dirs(feedstock_dir, str(tmpdir), ignore_dot_git=True, update_git=False)
+        chmod_plus_rwX(str(tmpdir), recursive=True)
 
         logger.debug(
             "host feedstock dir %s: %r",
