@@ -179,12 +179,12 @@ def run_container_operation(
     data : dict-like
         The result of the operation.
     """
-    mnt_args = [mount.to_mount_args() for mount in mounts]
+    mount_args = sum((mount.to_mount_args() for mount in mounts), [])
     extra_container_args = extra_container_args or []
 
     cmd = [
         *get_default_container_run_args(tmpfs_size_mb=tmpfs_size_mb),
-        *mnt_args,
+        *mount_args,
         *_get_proxy_mode_container_args(),
         *extra_container_args,
         get_default_container_name(),
