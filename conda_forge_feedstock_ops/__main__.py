@@ -70,20 +70,20 @@ def _setenv(name, value):
             os.environ[name] = old
 
 
-def _unpack_virtual_mounts_from_stdin():
+def unpack_virtual_mounts_from_stdin():
     CF_FEEDSTOCK_OPS_DIR.mkdir(parents=True, exist_ok=True)
     with tarfile.open(fileobj=sys.stdin.buffer, mode="r|") as tar:
         tar.extractall(CF_FEEDSTOCK_OPS_DIR, filter="data")
 
 
-def _repack_virtual_mounts_to_stdout():
+def repack_virtual_mounts_to_stdout():
     # possible improvement: communicate which mounts are read-only and skip them here
     # (now, there are communicated back via stdout, and filtered out in the host)
     with tarfile.open(fileobj=sys.stdout.buffer, mode="w|") as tar:
         tar.add(CF_FEEDSTOCK_OPS_DIR, arcname="")
 
 
-def _run_bot_task(func, *, log_level, existing_feedstock_node_attrs, **kwargs):
+def _run_bot_task(func, *, log_level, **kwargs):
     with (
         tempfile.TemporaryDirectory() as tmpdir_cbld,
         _setenv("CONDA_BLD_PATH", os.path.join(tmpdir_cbld, "conda-bld")),
@@ -110,7 +110,7 @@ def _run_bot_task(func, *, log_level, existing_feedstock_node_attrs, **kwargs):
                     try:
                         # logger call needs to be here so it gets the changed stdout/stderr
                         setup_logging(log_level)
-                        _unpack_virtual_mounts_from_stdin()
+                        unpack_virtual_mounts_from_stdin()
                         data = func(**kwargs)
                         ret["data"] = data
                     except Exception as e:
@@ -122,7 +122,7 @@ def _run_bot_task(func, *, log_level, existing_feedstock_node_attrs, **kwargs):
                             f.write(dumps(ret))
 
             finally:
-                _repack_virtual_mounts_to_stdout()
+                repack_virtual_mounts_to_stdout()
 
 
 def _execute_git_cmds_and_report(*, cmds, cwd, msg, ignore_stderr=False):
@@ -221,7 +221,6 @@ def main_container_rerender(log_level, timeout):
     return _run_bot_task(
         _rerender_feedstock,
         log_level=log_level,
-        existing_feedstock_node_attrs=None,
         timeout=timeout,
     )
 
@@ -232,7 +231,6 @@ def main_parse_package_and_feedstock_names(log_level):
     return _run_bot_task(
         _parse_package_and_feedstock_names,
         log_level=log_level,
-        existing_feedstock_node_attrs=None,
     )
 
 
@@ -242,5 +240,4 @@ def main_lint(log_level):
     return _run_bot_task(
         _lint,
         log_level=log_level,
-        existing_feedstock_node_attrs=None,
     )
