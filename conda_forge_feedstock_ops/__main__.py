@@ -19,6 +19,7 @@ import os
 import shutil
 import subprocess
 import sys
+import tarfile
 import tempfile
 import traceback
 from contextlib import contextmanager, redirect_stdout
@@ -27,10 +28,12 @@ from pathlib import PosixPath
 import click
 
 from conda_forge_feedstock_ops import CF_FEEDSTOCK_OPS_DIR as PURE_CF_FEEDSTOCK_OPS_DIR
+from conda_forge_feedstock_ops import RETURN_INFO_FILE_NAME
 
 # This file is executed inside the container, so we convert to PosixPath
 # to allow filesystem operations (only possible on Linux).
 CF_FEEDSTOCK_OPS_DIR = PosixPath(PURE_CF_FEEDSTOCK_OPS_DIR)
+RETURN_INFO_FILE_PATH = CF_FEEDSTOCK_OPS_DIR / RETURN_INFO_FILE_NAME
 
 existing_feedstock_node_attrs_option = click.option(
     "--existing-feedstock-node-attrs",
@@ -62,18 +65,17 @@ def _setenv(name, value):
             os.environ[name] = old
 
 
-def _get_existing_feedstock_node_attrs(existing_feedstock_node_attrs):
-    from conda_forge_feedstock_ops.json import loads
+def _unpack_virtual_mounts_from_stdin():
+    CF_FEEDSTOCK_OPS_DIR.mkdir(parents=True, exist_ok=True)
+    with tarfile.open(fileobj=sys.stdin.buffer, mode="r|") as tar:
+        tar.extractall(CF_FEEDSTOCK_OPS_DIR, filter="data")
 
-    if existing_feedstock_node_attrs == "-":
-        val = sys.stdin.read()
-        attrs = loads(val)
-    elif existing_feedstock_node_attrs.startswith("{"):
-        attrs = loads(existing_feedstock_node_attrs)
-    else:
-        raise ValueError("existing-feedstock-node-attrs must be a JSON string or '-'")
 
-    return attrs
+def _repack_virtual_mounts_to_stdout():
+    # possible improvement: communicate which mounts are read-only and skip them here
+    # (now, there are communicated back via stdout, and filtered out in the host)
+    with tarfile.open(fileobj=sys.stdout.buffer, mode="w|") as tar:
+        tar.add(CF_FEEDSTOCK_OPS_DIR, arcname="")
 
 
 def _run_bot_task(func, *, log_level, existing_feedstock_node_attrs, **kwargs):
@@ -93,30 +95,29 @@ def _run_bot_task(func, *, log_level, existing_feedstock_node_attrs, **kwargs):
 
         data = None
         ret = copy.copy(kwargs)
-        try:
-            with (
-                redirect_stdout(sys.stderr),
-                tempfile.TemporaryDirectory() as tmpdir,
-                pushd(tmpdir),
-            ):
-                # logger call needs to be here so it gets the changed stdout/stderr
-                setup_logging(log_level)
-                if existing_feedstock_node_attrs is not None:
-                    attrs = _get_existing_feedstock_node_attrs(
-                        existing_feedstock_node_attrs
-                    )
-                    data = func(attrs=attrs, **kwargs)
-                else:
-                    data = func(**kwargs)
 
-            ret["data"] = data
+        with (
+            tempfile.TemporaryDirectory() as tmpdir,
+            pushd(tmpdir),
+        ):
+            try:
+                with redirect_stdout(sys.stderr):
+                    try:
+                        # logger call needs to be here so it gets the changed stdout/stderr
+                        setup_logging(log_level)
+                        _unpack_virtual_mounts_from_stdin()
+                        data = func(**kwargs)
+                        ret["data"] = data
+                    except Exception as e:
+                        ret["data"] = data
+                        ret["error"] = repr(e)
+                        ret["traceback"] = traceback.format_exc()
+                    finally:
+                        with RETURN_INFO_FILE_PATH.open("w") as f:
+                            f.write(dumps(ret))
 
-        except Exception as e:
-            ret["data"] = data
-            ret["error"] = repr(e)
-            ret["traceback"] = traceback.format_exc()
-
-        print(dumps(ret))
+            finally:
+                _repack_virtual_mounts_to_stdout()
 
 
 def _execute_git_cmds_and_report(*, cmds, cwd, msg, ignore_stderr=False):

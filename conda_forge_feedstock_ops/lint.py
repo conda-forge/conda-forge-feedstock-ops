@@ -8,7 +8,7 @@ from pathlib import Path
 import conda_smithy.lint_recipe
 
 from conda_forge_feedstock_ops.container_utils import (
-    Mount,
+    VirtualMount,
     get_default_log_level_args,
     run_container_operation,
     should_use_container,
@@ -72,7 +72,7 @@ def _lint_containerized(feedstock_dir):
 
         data = run_container_operation(
             args=args,
-            mounts=[Mount.to_cf_feedstock_ops_dir(tmpdir, read_only=True)],
+            extra_mounts=[VirtualMount.to_cf_feedstock_ops_dir(tmpdir, read_only=True)],
             json_loads=loads,
         )
 

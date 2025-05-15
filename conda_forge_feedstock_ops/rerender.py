@@ -10,7 +10,7 @@ from pathlib import Path
 from threading import Event, Thread
 
 from conda_forge_feedstock_ops.container_utils import (
-    Mount,
+    VirtualMount,
     get_default_log_level_args,
     run_container_operation,
     should_use_container,
@@ -111,7 +111,10 @@ def rerender_containerized(feedstock_dir: str, timeout=None):
         )
 
         data = run_container_operation(
-            args, mounts=[Mount.to_cf_feedstock_ops_dir(tmpdir, read_only=False)]
+            args,
+            extra_mounts=[
+                VirtualMount.to_cf_feedstock_ops_dir(tmpdir, read_only=False)
+            ],
         )
 
         if data["commit_message"] is not None and data["patch"] is not None:
