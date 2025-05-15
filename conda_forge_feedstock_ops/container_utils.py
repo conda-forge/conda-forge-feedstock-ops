@@ -192,6 +192,7 @@ def _untar_directory_or_file(
 ):
     """
     Untar a directory or file from the tar file to the target directory.
+    Hidden files and directories are ignored.
     """
     members = (
         m
@@ -199,9 +200,16 @@ def _untar_directory_or_file(
         if m.name.startswith(str(path_inside_tar) + "/")
         or m.name == str(path_inside_tar)
     )
+    members = (
+        m
+        for m in members
+        if not any(part.startswith(".") for part in m.name.split("/"))
+    )
+
     # note that filter="data" is crucial to prevent security issues - the tar file
     # is untrusted!
     for member in members:
+        # ignore hidden files and directories
         tar.extract(member, target_dir_or_file.parent, set_attrs=False, filter="data")
 
 
