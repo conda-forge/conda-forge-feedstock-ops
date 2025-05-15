@@ -6,7 +6,6 @@ import tempfile
 from conftest import skipif_no_containers
 
 from conda_forge_feedstock_ops.os_utils import (
-    get_user_execute_permissions,
     pushd,
 )
 from conda_forge_feedstock_ops.rerender import rerender_containerized, rerender_local
@@ -272,6 +271,45 @@ def test_rerender_containerized_empty(use_containers):
         )
 
         assert msg is None
+
+
+def _all_fnames(root_dir):
+    fnames = set()
+    for root, dirs, files in os.walk(root_dir):
+        for file in files:
+            fnames.add(os.path.join(root, file))
+        for dr in dirs:
+            if dr in [".", ".."]:
+                continue
+            fnames.add(os.path.join(root, dr))
+    return fnames
+
+
+def get_user_execute_permissions(path):
+    """Get the user execute permissions of directory `path` and all of its contents.
+
+    Parameters
+    ----------
+    path : str
+        The path to the directory.
+
+    Returns
+    -------
+    dict
+        A dictionary mapping file paths to True if the user has execute permission or False otherwise.
+    """
+    fnames = _all_fnames(path)
+    perms = {}
+    for fname in sorted(fnames):
+        if ".git" in fname.split(os.path.sep):
+            continue
+
+        perm = os.stat(fname).st_mode
+        has_user_exe = os.stat(fname).st_mode & 0o100
+        key = os.path.relpath(fname, path)
+        print("got permissions of %s as %#o", key, perm)
+        perms[key] = has_user_exe
+    return perms
 
 
 @skipif_no_containers

@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import pprint
+import shutil
 import subprocess
 import tarfile
 import tempfile
@@ -11,7 +12,7 @@ from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path, PurePosixPath
 from tarfile import TarFile
-from typing import IO, Callable, Optional, Self
+from typing import IO, Callable, ClassVar, Optional, Self
 
 from conda_forge_feedstock_ops import CF_FEEDSTOCK_OPS_DIR, RETURN_INFO_FILE_NAME
 from conda_forge_feedstock_ops.settings import FeedstockOpsSettings
@@ -128,6 +129,12 @@ class VirtualMount:
     back to the host via stdout.
     """
 
+    IGNORE_PATHS: ClassVar[set[str]] = {".git"}
+    """
+    These subdirectories and files are ignored when untarring
+    if they appear anywhere in the path.
+    """
+
     host_path: Path
     """
     The path on the host to mount. Files and directories are supported.
@@ -187,13 +194,31 @@ def _mounts_to_tar(mounts: Iterable[VirtualMount]) -> Iterator[IO[bytes]]:
         yield target
 
 
+def _delete_non_ignore_paths(target_dir_or_file: Path):
+    """
+    Delete any files and directories in the target directory or file that are
+    NOT in the ignore paths.
+    """
+    for file_path in target_dir_or_file.rglob("*"):
+        relative_path = file_path.relative_to(target_dir_or_file)
+
+        if not VirtualMount.IGNORE_PATHS.intersection(relative_path.parts):
+            if file_path.is_dir():
+                shutil.rmtree(file_path)
+            else:
+                file_path.unlink()
+
+
 def _untar_directory_or_file(
     tar: TarFile, path_inside_tar: PurePosixPath, target_dir_or_file: Path
 ):
     """
     Untar a directory or file from the tar file to the target directory.
-    Hidden files and directories are ignored.
+    Any existing files and directories are removed, except if they were skipped
+    because they are in the ignore paths.
     """
+    _delete_non_ignore_paths(target_dir_or_file)
+
     members = (
         m
         for m in tar.getmembers()
@@ -203,14 +228,15 @@ def _untar_directory_or_file(
     members = (
         m
         for m in members
-        if not any(part.startswith(".") for part in m.name.split("/"))
+        if not any(part in VirtualMount.IGNORE_PATHS for part in m.name.split("/"))
     )
 
     # note that filter="data" is crucial to prevent security issues - the tar file
     # is untrusted!
     for member in members:
-        # ignore hidden files and directories
-        tar.extract(member, target_dir_or_file.parent, set_attrs=False, filter="data")
+        # set_attrs keeps permissions in a safe way
+        # https://docs.python.org/3/library/tarfile.html
+        tar.extract(member, target_dir_or_file.parent, set_attrs=True, filter="data")
 
 
 def _untar_mounts_from_stream(

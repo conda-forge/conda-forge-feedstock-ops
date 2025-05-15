@@ -13,10 +13,8 @@ These operations return their info by printing a JSON blob to stdout.
 """
 
 import copy
-import json
 import logging
 import os
-import shutil
 import subprocess
 import sys
 import tarfile
@@ -29,6 +27,13 @@ import click
 
 from conda_forge_feedstock_ops import CF_FEEDSTOCK_OPS_DIR as PURE_CF_FEEDSTOCK_OPS_DIR
 from conda_forge_feedstock_ops import RETURN_INFO_FILE_NAME
+from conda_forge_feedstock_ops.lint import lint
+from conda_forge_feedstock_ops.parse_package_and_feedstock_names import (
+    parse_package_and_feedstock_names,
+)
+from conda_forge_feedstock_ops.rerender import rerender_local
+
+LOGGER = logging.getLogger(__name__)
 
 # This file is executed inside the container, so we convert to PosixPath
 # to allow filesystem operations (only possible on Linux).
@@ -153,180 +158,55 @@ def _execute_git_cmds_and_report(*, cmds, cwd, msg, ignore_stderr=False):
 
 
 def _rerender_feedstock(*, timeout):
-    from conda_forge_feedstock_ops.os_utils import (
-        get_user_execute_permissions,
-        reset_permissions_with_user_execute,
-        sync_dirs,
+    input_fs_dirs = list(CF_FEEDSTOCK_OPS_DIR.glob("*-feedstock"))
+    assert len(input_fs_dirs) == 1, f"expected one feedstock, got {input_fs_dirs}"
+    input_fs_dir = input_fs_dirs[0]
+    LOGGER.debug(
+        "input container feedstock dir %s: %s",
+        input_fs_dir,
+        [path.name for path in input_fs_dir.iterdir()],
     )
-    from conda_forge_feedstock_ops.rerender import rerender_local
 
-    logger = logging.getLogger("conda_forge_feedstock_ops.container")
+    if timeout is not None:
+        kwargs = {"timeout": timeout}
+    else:
+        kwargs = {}
 
-    with tempfile.TemporaryDirectory() as tmpdir:
-        input_fs_dirs = list(CF_FEEDSTOCK_OPS_DIR.glob("*-feedstock"))
-        assert len(input_fs_dirs) == 1, f"expected one feedstock, got {input_fs_dirs}"
-        input_fs_dir = input_fs_dirs[0]
-        logger.debug(
-            "input container feedstock dir %s: %s",
-            input_fs_dir,
-            os.listdir(input_fs_dir),
-        )
-        input_permissions = (
-            CF_FEEDSTOCK_OPS_DIR / f"permissions-{input_fs_dir.name}.json"
-        )
-        with open(input_permissions) as f:
-            input_permissions_dict = json.load(f)
-
-        fs_dir = os.path.join(tmpdir, os.path.basename(input_fs_dir))
-        sync_dirs(str(input_fs_dir), fs_dir, ignore_dot_git=True, update_git=False)
-        logger.debug(
-            "copied container feedstock dir %s: %s", fs_dir, os.listdir(fs_dir)
-        )
-
-        reset_permissions_with_user_execute(fs_dir, input_permissions_dict)
-
-        has_gitignore = os.path.exists(os.path.join(fs_dir, ".gitignore"))
-        if has_gitignore:
-            shutil.move(
-                os.path.join(fs_dir, ".gitignore"),
-                os.path.join(fs_dir, ".gitignore.bak"),
-            )
-
-        cmds = [
-            ["git", "init", "-b", "main", "."],
-            ["git", "add", "."],
-            ["git", "commit", "-am", "initial commit"],
-        ]
-        if has_gitignore:
-            cmds += [
-                ["git", "mv", ".gitignore.bak", ".gitignore"],
-                ["git", "commit", "-am", "put back gitignore"],
-            ]
-        _execute_git_cmds_and_report(
-            cmds=cmds,
-            cwd=fs_dir,
-            msg="git init failed for rerender",
-        )
-
-        prev_commit = _execute_git_cmds_and_report(
-            cmds=[["git", "rev-parse", "HEAD"]],
-            cwd=fs_dir,
-            msg="git rev-parse HEAD failed for rerender prev commit",
-            ignore_stderr=True,
-        ).strip()
-
-        if timeout is not None:
-            kwargs = {"timeout": timeout}
-        else:
-            kwargs = {}
-        msg = rerender_local(fs_dir, **kwargs)
-
-        if logger.getEffectiveLevel() <= logging.DEBUG:
-            cmds = [
-                ["git", "status"],
-                ["git", "diff", "--name-only"],
-                ["git", "diff", "--name-only", "--staged"],
-                ["git", "--no-pager", "diff"],
-                ["git", "--no-pager", "diff", "--staged"],
-            ]
-            _execute_git_cmds_and_report(
-                cmds=cmds,
-                cwd=fs_dir,
-                msg="git status failed for rerender",
-            )
-
-        if msg is not None:
-            output_permissions_dict = get_user_execute_permissions(fs_dir)
-
-            _execute_git_cmds_and_report(
-                cmds=[
-                    ["git", "add", "-f", "."],
-                    ["git", "commit", "-am", msg],
-                ],
-                cwd=fs_dir,
-                msg="git commit failed for rerender",
-            )
-            curr_commit = _execute_git_cmds_and_report(
-                cmds=[["git", "rev-parse", "HEAD"]],
-                cwd=fs_dir,
-                msg="git rev-parse HEAD failed for rerender curr commit",
-                ignore_stderr=True,
-            ).strip()
-            patch = _execute_git_cmds_and_report(
-                cmds=[["git", "diff", prev_commit + ".." + curr_commit]],
-                cwd=fs_dir,
-                msg="git diff failed for rerender",
-                ignore_stderr=True,
-            )
-        else:
-            patch = None
-            output_permissions_dict = input_permissions_dict
-
-        return {
-            "commit_message": msg,
-            "patch": patch,
-            "permissions": output_permissions_dict,
-        }
+    return {"commit_message": rerender_local(str(input_fs_dir), **kwargs)}
 
 
 def _parse_package_and_feedstock_names():
-    from conda_forge_feedstock_ops.os_utils import sync_dirs
-    from conda_forge_feedstock_ops.parse_package_and_feedstock_names import (
-        parse_package_and_feedstock_names,
+    input_fs_dirs = list(CF_FEEDSTOCK_OPS_DIR.glob("*-feedstock"))
+    assert len(input_fs_dirs) == 1, f"expected one feedstock, got {input_fs_dirs}"
+    input_fs_dir = input_fs_dirs[0]
+    LOGGER.debug(
+        "input container feedstock dir %s: %s",
+        input_fs_dir,
+        [path.name for path in input_fs_dir.iterdir()],
     )
 
-    logger = logging.getLogger("conda_forge_feedstock_ops.container")
+    fs_name, pkg_names, subdirs = parse_package_and_feedstock_names(
+        str(input_fs_dir), use_container=False
+    )
 
-    with tempfile.TemporaryDirectory() as tmpdir:
-        input_fs_dirs = list(CF_FEEDSTOCK_OPS_DIR.glob("*-feedstock"))
-        assert len(input_fs_dirs) == 1, f"expected one feedstock, got {input_fs_dirs}"
-        input_fs_dir = input_fs_dirs[0]
-        logger.debug(
-            "input container feedstock dir %s: %s",
-            input_fs_dir,
-            os.listdir(input_fs_dir),
-        )
-
-        fs_dir = os.path.join(tmpdir, os.path.basename(input_fs_dir))
-        sync_dirs(str(input_fs_dir), fs_dir, ignore_dot_git=True, update_git=False)
-        logger.debug(
-            "copied container feedstock dir %s: %s", fs_dir, os.listdir(fs_dir)
-        )
-
-        fs_name, pkg_names, subdirs = parse_package_and_feedstock_names(
-            fs_dir, use_container=False
-        )
-
-        return {
-            "feedstock_name": fs_name,
-            "package_names": pkg_names,
-            "subdirs": subdirs,
-        }
+    return {
+        "feedstock_name": fs_name,
+        "package_names": pkg_names,
+        "subdirs": subdirs,
+    }
 
 
 def _lint():
-    from conda_forge_feedstock_ops.lint import lint
-    from conda_forge_feedstock_ops.os_utils import sync_dirs
+    input_fs_dir = CF_FEEDSTOCK_OPS_DIR
+    LOGGER.debug(
+        "input container feedstock dir %s: %s",
+        input_fs_dir,
+        [path.name for path in input_fs_dir.iterdir()],
+    )
 
-    logger = logging.getLogger("conda_forge_feedstock_ops.container")
+    lints, hints, errors = lint(str(input_fs_dir), use_container=False)
 
-    with tempfile.TemporaryDirectory() as tmpdir:
-        input_fs_dir = CF_FEEDSTOCK_OPS_DIR
-        logger.debug(
-            "input container feedstock dir %s: %s",
-            input_fs_dir,
-            [path.name for path in input_fs_dir.iterdir()],
-        )
-
-        fs_dir = os.path.join(tmpdir, os.path.basename(input_fs_dir))
-        sync_dirs(str(input_fs_dir), fs_dir, ignore_dot_git=True, update_git=False)
-        logger.debug(
-            "copied container feedstock dir %s: %s", fs_dir, os.listdir(fs_dir)
-        )
-
-        lints, hints, errors = lint(fs_dir, use_container=False)
-
-        return {"lints": lints, "hints": hints, "errors": errors}
+    return {"lints": lints, "hints": hints, "errors": errors}
 
 
 @click.group()

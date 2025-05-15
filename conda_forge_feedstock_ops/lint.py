@@ -1,12 +1,10 @@
 import logging
-import os
-import shutil
-import tempfile
 from collections import defaultdict
 from pathlib import Path
 
 import conda_smithy.lint_recipe
 
+from conda_forge_feedstock_ops import CF_FEEDSTOCK_OPS_DIR
 from conda_forge_feedstock_ops.container_utils import (
     VirtualMount,
     get_default_log_level_args,
@@ -14,7 +12,6 @@ from conda_forge_feedstock_ops.container_utils import (
     should_use_container,
 )
 from conda_forge_feedstock_ops.json import loads
-from conda_forge_feedstock_ops.os_utils import chmod_plus_rwX, sync_dirs
 
 logger = logging.getLogger(__name__)
 
@@ -48,38 +45,24 @@ def lint(feedstock_dir, use_container=None):
         return _lint_local(feedstock_dir)
 
 
-def _lint_containerized(feedstock_dir):
+def _lint_containerized(feedstock_dir: str):
+    feedstock_dir = Path(feedstock_dir)
     args = [
         "conda-forge-feedstock-ops-container",
         "lint",
     ] + get_default_log_level_args(logger)
 
-    with tempfile.TemporaryDirectory() as tmpdir_str:
-        tmpdir = Path(tmpdir_str)
-        sync_dirs(feedstock_dir, str(tmpdir), ignore_dot_git=True, update_git=False)
-        chmod_plus_rwX(str(tmpdir), recursive=True)
-
-        logger.debug(
-            "host feedstock dir %s: %r",
-            feedstock_dir,
-            os.listdir(feedstock_dir),
-        )
-        logger.debug(
-            "copied host feedstock dir %s: %r",
-            tmpdir,
-            os.listdir(tmpdir),
-        )
-
-        data = run_container_operation(
-            args=args,
-            extra_mounts=[VirtualMount.to_cf_feedstock_ops_dir(tmpdir, read_only=True)],
-            json_loads=loads,
-        )
-
-        # When tempfile removes tempdir, it tries to reset permissions on subdirs.
-        # This causes a permission error since the subdirs were made by the user
-        # in the container. So we remove the subdir we made before cleaning up.
-        shutil.rmtree(tmpdir)
+    data = run_container_operation(
+        args=args,
+        extra_mounts=[
+            VirtualMount(
+                host_path=feedstock_dir,
+                container_path=CF_FEEDSTOCK_OPS_DIR / feedstock_dir.name,
+                read_only=False,
+            )
+        ],
+        json_loads=loads,
+    )
 
     return data["lints"], data["hints"], data["errors"]
 

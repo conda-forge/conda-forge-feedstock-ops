@@ -83,7 +83,7 @@ def rerender_containerized(feedstock_dir: str, timeout=None):
         args,
         extra_mounts=[
             VirtualMount(
-                host_path=Path(feedstock_dir),
+                host_path=feedstock_dir,
                 container_path=CF_FEEDSTOCK_OPS_DIR / feedstock_dir.name,
                 read_only=False,
             )
