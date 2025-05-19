@@ -175,6 +175,7 @@ def test_untar_mounts_from_stdin_timeout(tmp_path_factory, example_tar_file):
 
 
 def test_untar_mounts_from_stream_block_symlinks(tmp_path_factory):
+    assert ".git" in VirtualMount.IGNORE_PATHS, "This test assumes .git is ignored"
     host_location_1 = tmp_path_factory.mktemp("host_location_1")
     host_location_2 = tmp_path_factory.mktemp("host_location_2")
     mounts = [
@@ -204,14 +205,19 @@ def test_untar_mounts_from_stream_block_symlinks(tmp_path_factory):
     benign_symlink = tar_creation_dir / "benign_symlink"
     os.symlink("benign_target", benign_symlink)
 
+    symlink_to_ignore_path = tar_creation_dir / "symlink_to_ignore"
+    os.symlink(".git", symlink_to_ignore_path)
+
     tar_file = tar_creation_dir / "test.tar"
     with tarfile.open(tar_file, "w") as tar:
         tar.add(evil_symlink, arcname="writable/evil_symlink")
         tar.add(benign_symlink, arcname="writable/benign_symlink")
         tar.add(benign_target, arcname="writable/benign_target")
+        tar.add(symlink_to_ignore_path, arcname="writable/symlink_to_ignore")
 
     with open(tar_file, mode="rb") as tar:
         _untar_mounts_from_stream(mounts, tar.read())
 
     assert not (host_location_2 / "evil_symlink").exists()
     assert (host_location_2 / "benign_symlink").exists()
+    assert not (host_location_2 / "symlink_to_ignore").is_symlink()

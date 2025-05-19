@@ -106,13 +106,20 @@ def _validate_symlinks_within_dir(directory: Path):
     """
     Validates that all symlinks within the directory point to locations inside the directory.
     Removes any symlinks that point outside.
+    Also, symlinks cannot point to ignore paths.
     """
+    directory = directory.resolve()
     for file_path in directory.rglob("*"):
         if not file_path.is_symlink():
             continue
         target = file_path.resolve()
-        if directory.resolve() not in target.parents:
+        if not target.is_relative_to(directory):
             # Remove symlink if it points outside tmpdir
+            file_path.unlink()
+            continue
+        relative_target = target.relative_to(directory)
+        if any(VirtualMount.IGNORE_PATHS.intersection(relative_target.parts)):
+            # Remove symlink if it points to an ignore path
             file_path.unlink()
 
 
