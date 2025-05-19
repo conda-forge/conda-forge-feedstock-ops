@@ -14,13 +14,13 @@ from yaml import safe_load
 
 from conda_forge_feedstock_ops import CF_FEEDSTOCK_OPS_DIR
 from conda_forge_feedstock_ops.container_utils import (
-    VirtualMount,
     get_default_log_level_args,
     run_container_operation,
     should_use_container,
 )
 from conda_forge_feedstock_ops.json import loads
 from conda_forge_feedstock_ops.os_utils import override_env
+from conda_forge_feedstock_ops.virtual_mounts_host import VirtualMount
 
 logger = logging.getLogger(__name__)
 CONDA_BUILD = "conda-build"

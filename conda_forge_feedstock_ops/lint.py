@@ -6,12 +6,12 @@ import conda_smithy.lint_recipe
 
 from conda_forge_feedstock_ops import CF_FEEDSTOCK_OPS_DIR
 from conda_forge_feedstock_ops.container_utils import (
-    VirtualMount,
     get_default_log_level_args,
     run_container_operation,
     should_use_container,
 )
 from conda_forge_feedstock_ops.json import loads
+from conda_forge_feedstock_ops.virtual_mounts_host import VirtualMount
 
 logger = logging.getLogger(__name__)
 
