@@ -150,17 +150,20 @@ def _untar_mounts_from_stream(mounts: Iterable[VirtualMount], buffer: bytes) -> 
             if mount.read_only:
                 continue
             _delete_non_ignore_paths(mount.host_path)
-
-            if (tmpdir / mount.relative_container_path).is_file():
+            origin_path = tmpdir / mount.relative_container_path
+            if origin_path.is_file():
+                if mount.host_path.is_dir():
+                    # directory is replaced by file
+                    shutil.rmtree(mount.host_path)
                 # if the mount is a file, copy it to the host path
                 shutil.copy2(
-                    tmpdir / mount.relative_container_path,
+                    origin_path,
                     mount.host_path,
                 )
                 continue
             # else, it is a directory
             shutil.copytree(
-                tmpdir / mount.relative_container_path,
+                origin_path,
                 mount.host_path,
                 symlinks=True,
                 dirs_exist_ok=True,
