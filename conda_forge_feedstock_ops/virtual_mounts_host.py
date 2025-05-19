@@ -73,6 +73,30 @@ class VirtualMount:
         return self.container_path.relative_to(CF_FEEDSTOCK_OPS_DIR)
 
 
+def _ensure_no_overlapping_mounts(mounts: Iterable[VirtualMount]) -> None:
+    """
+    Ensure that the host paths and container paths of the mounts do not overlap.
+    """
+    for i, mount in enumerate(mounts):
+        for j, other_mount in enumerate(mounts):
+            if i == j:
+                continue
+            if (
+                mount.host_path in other_mount.host_path.parents
+                or other_mount.host_path in mount.host_path.parents
+                or mount.host_path == other_mount.host_path
+            ):
+                raise ValueError("host paths may not overlap")
+            if (
+                mount.relative_container_path
+                in other_mount.relative_container_path.parents
+                or other_mount.relative_container_path
+                in mount.relative_container_path.parents
+                or mount.relative_container_path == other_mount.relative_container_path
+            ):
+                raise ValueError("container paths may not overlap")
+
+
 @contextmanager
 def _mounts_to_tar(mounts: Iterable[VirtualMount]) -> Iterator[IO[bytes]]:
     """

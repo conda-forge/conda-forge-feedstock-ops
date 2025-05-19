@@ -12,6 +12,7 @@ from conda_forge_feedstock_ops import CF_FEEDSTOCK_OPS_DIR, RETURN_INFO_FILE_NAM
 from conda_forge_feedstock_ops.settings import FeedstockOpsSettings
 from conda_forge_feedstock_ops.virtual_mounts_host import (
     VirtualMount,
+    _ensure_no_overlapping_mounts,
     _mounts_to_tar,
     _untar_mounts_from_stream,
 )
@@ -173,6 +174,7 @@ def run_container_operation(
             )
         ]
         mounts.extend(extra_mounts)
+        _ensure_no_overlapping_mounts(mounts)
 
         with _mounts_to_tar(mounts) as stdin_tar_input:
             res = subprocess.run(
