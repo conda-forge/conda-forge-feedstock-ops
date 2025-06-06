@@ -3,10 +3,19 @@ import logging
 import os
 import pprint
 import subprocess
+import tempfile
 from collections.abc import Iterable
+from pathlib import Path
 from typing import Callable, Optional
 
+from conda_forge_feedstock_ops import CF_FEEDSTOCK_OPS_DIR, RETURN_INFO_FILE_NAME
 from conda_forge_feedstock_ops.settings import FeedstockOpsSettings
+from conda_forge_feedstock_ops.virtual_mounts_host import (
+    VirtualMount,
+    _ensure_no_overlapping_mounts,
+    _mounts_to_tar,
+    _untar_mounts_from_stream,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +69,8 @@ def get_default_container_run_args(
             "--cap-drop=all",
             "--mount",
             f"type=tmpfs,destination=/tmp,tmpfs-mode=1777,tmpfs-size={tmpfs_size_bytes}",
+            "--mount",
+            f"type=tmpfs,destination={CF_FEEDSTOCK_OPS_DIR},tmpfs-mode=1777,tmpfs-size={tmpfs_size_bytes}",
             "-m",
             "6000m",
             "--cpus",
@@ -111,9 +122,7 @@ def run_container_operation(
     args: Iterable[str],
     json_loads: Callable = json.loads,
     tmpfs_size_mb: int = DEFAULT_CONTAINER_TMPFS_SIZE_MB,
-    input: Optional[str] = None,
-    mount_dir: Optional[str] = None,
-    mount_readonly: bool = True,
+    extra_mounts: Iterable[VirtualMount] = (),
     extra_container_args: Optional[Iterable[str]] = None,
 ):
     """Run a feedstock operation in a container.
@@ -126,12 +135,11 @@ def run_container_operation(
         The function to use to load JSON to a string, by default `json.loads`.
     tmpfs_size_mb
         The size of the tmpfs in MB, by default 10.
-    input
-        The input to pass to the container, by default None.
-    mount_dir
-        The directory to mount to the container at `/cf_feedstock_ops_dir`, by default None.
-    mount_readonly
-        Whether to mount the directory as read-only, by default True.
+    extra_mounts
+        The virtual mounts passed to the container, by default none.
+        The contents of the host paths are passed to the container via stdin,
+        in tarred format.
+        By default, only the return info file is mounted.
     extra_container_args
         Extra arguments to pass to the container, by default None.
 
@@ -140,55 +148,83 @@ def run_container_operation(
     data : dict-like
         The result of the operation.
     """
-    if mount_dir is not None:
-        mount_dir = os.path.abspath(mount_dir)
-        mnt_args = [
-            "--mount",
-            f"type=bind,source={mount_dir},destination=/cf_feedstock_ops_dir",
-        ]
-        if mount_readonly:
-            mnt_args[-1] += ",readonly"
-    else:
-        mnt_args = []
-
     extra_container_args = extra_container_args or []
 
     cmd = [
         *get_default_container_run_args(tmpfs_size_mb=tmpfs_size_mb),
-        *mnt_args,
         *_get_proxy_mode_container_args(),
         *extra_container_args,
         get_default_container_name(),
         *args,
     ]
-    res = subprocess.run(
-        cmd,
-        stdout=subprocess.PIPE,
-        text=True,
-        input=input,
-    )
-    # we handle this ourselves to customize the error message
-    if res.returncode != 0:
-        raise ContainerRuntimeError(
-            error=f"Error running '{' '.join(args)}' in container - return code {res.returncode}:"
-            f"\ncmd: {pprint.pformat(cmd)}"
-            f"\noutput: {pprint.pformat(res.stdout)}",
-            args=args,
-            cmd=pprint.pformat(cmd),
-            returncode=res.returncode,
-        )
 
-    try:
-        ret = json_loads(res.stdout)
-    except json.JSONDecodeError:
-        raise ContainerRuntimeError(
-            error=f"Error running '{' '.join(args)}' in container - JSON could not parse stdout:"
-            f"\ncmd: {pprint.pformat(cmd)}"
-            f"\noutput: {pprint.pformat(res.stdout)}",
-            args=args,
-            cmd=pprint.pformat(cmd),
-            returncode=res.returncode,
-        )
+    with tempfile.TemporaryDirectory() as tmpdir_str:
+        tmpdir = Path(tmpdir_str)
+
+        # the return_info_file returns the result of the operation
+        return_info_file = tmpdir / RETURN_INFO_FILE_NAME
+        return_info_file.touch()
+
+        # the return info file must be present
+        mounts = [
+            VirtualMount(
+                return_info_file,
+                CF_FEEDSTOCK_OPS_DIR / RETURN_INFO_FILE_NAME,
+                read_only=False,
+            )
+        ]
+        mounts.extend(extra_mounts)
+        _ensure_no_overlapping_mounts(mounts)
+
+        with _mounts_to_tar(mounts) as stdin_tar_input:
+            res = subprocess.run(
+                cmd,
+                stdout=subprocess.PIPE,
+                stdin=stdin_tar_input,
+            )
+
+        # we handle this ourselves to customize the error message
+        if res.returncode != 0:
+            try:
+                stdout_str = res.stdout.decode("utf-8")
+            except UnicodeDecodeError:
+                stdout_str = "(cannot decode)"
+            raise ContainerRuntimeError(
+                error=f"Error running '{' '.join(args)}' in container - return code {res.returncode}:"
+                f"\ncmd: {pprint.pformat(cmd)}\nstdout: {stdout_str}",
+                args=args,
+                cmd=pprint.pformat(cmd),
+                returncode=res.returncode,
+            )
+        try:
+            # possible improvement: pipe stdout directly to _untar_mounts_from_stream
+            _untar_mounts_from_stream(mounts, res.stdout)
+        except Exception as e:
+            try:
+                stdout_str = res.stdout.decode("utf-8")
+            except UnicodeDecodeError:
+                stdout_str = "(cannot decode)"
+            raise ContainerRuntimeError(
+                error=f"Error running '{' '.join(args)}' in container - error while extracting virtual mounts:"
+                f"\ncmd: {pprint.pformat(cmd)}\nstdout: {stdout_str}",
+                args=args,
+                cmd=pprint.pformat(cmd),
+                returncode=res.returncode,
+            ) from e
+
+        with return_info_file.open("r") as f:
+            ret_str = f.read()
+
+        try:
+            ret = json_loads(ret_str)
+        except json.JSONDecodeError:
+            raise ContainerRuntimeError(
+                error=f"Error running '{' '.join(args)}' in container - JSON could not be parsed from return info file:"
+                f"\ncmd: {pprint.pformat(cmd)}\nstring: {ret_str}",
+                args=args,
+                cmd=pprint.pformat(cmd),
+                returncode=res.returncode,
+            )
 
     if "error" in ret:
         if (
