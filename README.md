@@ -32,25 +32,30 @@ perform operations on feedstocks in the presence of sensitive data.
 
 ### Input
 
-Data can be input into the container via one of three mechanisms
+Data can be input into the container via one of two mechanisms
 
 1. Passing data as arguments over the command line.
-2. Passing data via `stdin`.
-3. Mounting a directory on the host to `/cf_feedstock_ops_dir`
-   in the container. This mount is read-only by default.
+2. Mounting a directory on the host to `/cf_feedstock_ops_dir`
+   in the container. This mount is read-only by default. Internally, the mount is
+   not translated to a Docker bind mount, but rather to logic passing tar files
+   to and from the container via stdin and stdout. This is for security hardening.
+
+**IMPORTANT: Passing data via stdin is not supported, as this line of
+communication is used for inputting tarfiles to the container.**
 
 ### Output
 
-Data is returned to the calling process via one of two ways
+Data is returned to the calling process via one of two ways:
 
-1. The container can print a json blob to `stdout`. This json blob must
-   have only two top-level keys, `error` and `data`. Any output data should
-   be put in the `data` key. The `error` key is discussed below.
-2. The container can put data in the `/cf_feedstock_ops_dir` if it is not mounted
+1. The container MUST write a json file to `cf_feedstock_ops_dir/return_info.json`.
+   This json blob must have only two top-level keys, `error` and `data`.
+   Any output data should be put in the `data` key. The `error` key is discussed below.
+2. The container can put other data in the `/cf_feedstock_ops_dir` if it is not mounted
    as read-only.
 
-**IMPORTANT: The container can only print a valid json blob to `stdout`.
-All other output should be sent to `stderr`.**
+**IMPORTANT: The container cannot write anything to `stdout` because this will break
+the tarfile output mechanism for the virtual mounts.**
+You can send output to `stderr`.
 
 ### Error Handling
 

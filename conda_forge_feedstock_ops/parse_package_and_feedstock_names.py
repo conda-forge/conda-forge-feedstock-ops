@@ -1,8 +1,7 @@
 import glob
 import logging
 import os
-import shutil
-import tempfile
+from pathlib import Path
 
 import conda_build.api
 import conda_build.config
@@ -13,13 +12,15 @@ from conda_smithy.utils import get_feedstock_name_from_meta
 from rattler_build_conda_compat.render import MetaData as RattlerBuildMetaData
 from yaml import safe_load
 
+from conda_forge_feedstock_ops import CF_FEEDSTOCK_OPS_DIR
 from conda_forge_feedstock_ops.container_utils import (
     get_default_log_level_args,
     run_container_operation,
     should_use_container,
 )
 from conda_forge_feedstock_ops.json import loads
-from conda_forge_feedstock_ops.os_utils import chmod_plus_rwX, override_env, sync_dirs
+from conda_forge_feedstock_ops.os_utils import override_env
+from conda_forge_feedstock_ops.virtual_mounts_host import VirtualMount
 
 logger = logging.getLogger(__name__)
 CONDA_BUILD = "conda-build"
@@ -54,41 +55,24 @@ def parse_package_and_feedstock_names(feedstock_dir, use_container=None):
         return _parse_package_and_feedstock_names_local(feedstock_dir)
 
 
-def _parse_package_and_feedstock_names_containerized(feedstock_dir):
+def _parse_package_and_feedstock_names_containerized(feedstock_dir: str):
+    feedstock_dir = Path(feedstock_dir)
     args = [
         "conda-forge-feedstock-ops-container",
         "parse-package-and-feedstock-names",
     ] + get_default_log_level_args(logger)
 
-    with tempfile.TemporaryDirectory() as tmpdir:
-        tmp_feedstock_dir = os.path.join(tmpdir, os.path.basename(feedstock_dir))
-        sync_dirs(
-            feedstock_dir, tmp_feedstock_dir, ignore_dot_git=True, update_git=False
-        )
-        chmod_plus_rwX(tmpdir, recursive=True)
-
-        logger.debug(
-            "host feedstock dir %s: %r",
-            feedstock_dir,
-            os.listdir(feedstock_dir),
-        )
-        logger.debug(
-            "copied host feedstock dir %s: %r",
-            tmp_feedstock_dir,
-            os.listdir(tmp_feedstock_dir),
-        )
-
-        data = run_container_operation(
-            args,
-            mount_readonly=True,
-            mount_dir=tmpdir,
-            json_loads=loads,
-        )
-
-        # When tempfile removes tempdir, it tries to reset permissions on subdirs.
-        # This causes a permission error since the subdirs were made by the user
-        # in the container. So we remove the subdir we made before cleaning up.
-        shutil.rmtree(tmp_feedstock_dir)
+    data = run_container_operation(
+        args,
+        extra_mounts=[
+            VirtualMount(
+                host_path=feedstock_dir,
+                container_path=CF_FEEDSTOCK_OPS_DIR / feedstock_dir.name,
+                read_only=False,
+            )
+        ],
+        json_loads=loads,
+    )
 
     return data["feedstock_name"], data["package_names"], data["subdirs"]
 
