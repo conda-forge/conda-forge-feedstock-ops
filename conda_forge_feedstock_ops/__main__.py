@@ -299,6 +299,8 @@ def _parse_package_and_feedstock_names():
 
 
 def _lint():
+    import conda_forge_tick
+
     from conda_forge_feedstock_ops.lint import lint
     from conda_forge_feedstock_ops.os_utils import sync_dirs
 
@@ -318,7 +320,12 @@ def _lint():
             "copied container feedstock dir %s: %s", fs_dir, os.listdir(fs_dir)
         )
 
-        lints, hints, errors = lint(fs_dir, use_container=False)
+        # set path to the bot JSON schema to point to local copy
+        with _setenv(
+            "CONDA_SMITHY_BOT_SCHEMA_URI",
+            f"file://{os.path.join(os.path.dirname(conda_forge_tick.__file__), 'cf_tick_schema.json')}",
+        ):
+            lints, hints, errors = lint(fs_dir, use_container=False)
 
         return {"lints": lints, "hints": hints, "errors": errors}
 
