@@ -257,9 +257,7 @@ def test_rerender_containerized_same_as_local_pinnings(use_containers, capfd):
 
             try:
                 msg = rerender_containerized(
-                    os.path.join(
-                        tmpdir_cont, "conda-forge-pinning-feedstock"
-                    ),
+                    os.path.join(tmpdir_cont, "conda-forge-pinning-feedstock"),
                 )
             finally:
                 captured = capfd.readouterr()
@@ -305,9 +303,7 @@ def test_rerender_containerized_same_as_local_pinnings(use_containers, capfd):
 
             try:
                 local_msg = rerender_local(
-                    os.path.join(
-                        tmpdir_local, "conda-forge-pinning-feedstock"
-                    ),
+                    os.path.join(tmpdir_local, "conda-forge-pinning-feedstock"),
                 )
             finally:
                 local_captured = capfd.readouterr()
