@@ -100,7 +100,7 @@ def test_rerender_local_git_staged():
 
 
 @skipif_no_containers
-def test_rerender_containerized_same_as_local(use_containers, capfd):
+def test_rerender_containerized_same_as_local_own_feedstock(use_containers, capfd):
     with (
         tempfile.TemporaryDirectory() as tmpdir_cont,
         tempfile.TemporaryDirectory() as tmpdir_local,
@@ -191,6 +191,130 @@ def test_rerender_containerized_same_as_local(use_containers, capfd):
 
             with pushd("conda-forge-feedstock-check-solvable-feedstock"):
                 assert os.path.exists(".azure-pipelines/azure-pipelines-linux.yml")
+
+        assert (
+            msg.split("conda-forge-pinning")[1]
+            == local_msg.split("conda-forge-pinning")[1]
+        )
+
+        # now compare files
+        cont_fnames = set(
+            glob.glob(os.path.join(tmpdir_cont, "**", "*"), recursive=True)
+        )
+        local_fnames = set(
+            glob.glob(os.path.join(tmpdir_local, "**", "*"), recursive=True)
+        )
+
+        rel_cont_fnames = {os.path.relpath(fname, tmpdir_cont) for fname in cont_fnames}
+        rel_local_fnames = {
+            os.path.relpath(fname, tmpdir_local) for fname in local_fnames
+        }
+        assert rel_cont_fnames == rel_local_fnames, (
+            f"{rel_cont_fnames} != {rel_local_fnames}"
+        )
+
+        for cfname in cont_fnames:
+            lfname = os.path.join(tmpdir_local, os.path.relpath(cfname, tmpdir_cont))
+            if not os.path.isdir(cfname):
+                with open(cfname, "rb") as f:
+                    cdata = f.read()
+                with open(lfname, "rb") as f:
+                    ldata = f.read()
+                assert cdata == ldata, f"{cfname} not equal to local"
+
+
+@skipif_no_containers
+def test_rerender_containerized_same_as_local_pinnings(use_containers, capfd):
+    with (
+        tempfile.TemporaryDirectory() as tmpdir_cont,
+        tempfile.TemporaryDirectory() as tmpdir_local,
+    ):
+        assert tmpdir_cont != tmpdir_local
+
+        with pushd(tmpdir_cont):
+            subprocess.run(
+                [
+                    "git",
+                    "clone",
+                    "https://github.com/conda-forge/conda-forge-pinning-feedstock.git",
+                ]
+            )
+            # make sure rerender happens
+            with pushd("conda-forge-pinning-feedstock"):
+                cmds = [
+                    ["git", "rm", "-f", ".gitignore"],
+                    ["git", "rm", "-rf", ".scripts"],
+                    ["git", "rm", "-f", ".github/workflows/conda-build.yml"],
+                    ["git", "config", "user.email", "conda@conda.conda"],
+                    ["git", "config", "user.name", "conda c. conda"],
+                    ["git", "commit", "-m", "test commit"],
+                ]
+                for cmd in cmds:
+                    subprocess.run(
+                        cmd,
+                        check=True,
+                    )
+
+            try:
+                msg = rerender_containerized(
+                    os.path.join(
+                        tmpdir_cont, "conda-forge-pinning-feedstock"
+                    ),
+                )
+            finally:
+                captured = capfd.readouterr()
+                print(f"out: {captured.out}\nerr: {captured.err}")
+
+            if "git commit -m " in captured.err:
+                assert msg is not None, (
+                    f"msg: {msg}\nout: {captured.out}\nerr: {captured.err}"
+                )
+                assert msg.startswith("MNT:"), (
+                    f"msg: {msg}\nout: {captured.out}\nerr: {captured.err}"
+                )
+                with pushd("conda-forge-pinning-feedstock"):
+                    assert os.path.exists(".azure-pipelines/azure-pipelines-linux.yml")
+            else:
+                assert msg is None, (
+                    f"msg: {msg}\nout: {captured.out}\nerr: {captured.err}"
+                )
+
+        with pushd(tmpdir_local):
+            subprocess.run(
+                [
+                    "git",
+                    "clone",
+                    "https://github.com/conda-forge/conda-forge-pinning-feedstock.git",
+                ]
+            )
+            # make sure rerender happens
+            with pushd("conda-forge-pinning-feedstock"):
+                cmds = [
+                    ["git", "rm", "-f", ".gitignore"],
+                    ["git", "rm", "-rf", ".scripts"],
+                    ["git", "rm", "-f", ".github/workflows/conda-build.yml"],
+                    ["git", "config", "user.email", "conda@conda.conda"],
+                    ["git", "config", "user.name", "conda c. conda"],
+                    ["git", "commit", "-m", "test commit"],
+                ]
+                for cmd in cmds:
+                    subprocess.run(
+                        cmd,
+                        check=True,
+                    )
+
+            try:
+                local_msg = rerender_local(
+                    os.path.join(
+                        tmpdir_local, "conda-forge-pinning-feedstock"
+                    ),
+                )
+            finally:
+                local_captured = capfd.readouterr()
+                print(f"out: {local_captured.out}\nerr: {local_captured.err}")
+
+            with pushd("conda-forge-pinning-feedstock"):
+                assert os.path.exists(".github/workflows/conda-build.yml")
 
         assert (
             msg.split("conda-forge-pinning")[1]
