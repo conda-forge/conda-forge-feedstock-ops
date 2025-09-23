@@ -271,7 +271,7 @@ def test_rerender_containerized_same_as_local_pinnings(use_containers, capfd):
                     f"msg: {msg}\nout: {captured.out}\nerr: {captured.err}"
                 )
                 with pushd("conda-forge-pinning-feedstock"):
-                    assert os.path.exists(".azure-pipelines/azure-pipelines-linux.yml")
+                    assert os.path.exists(".github/workflows/conda-build.yml")
             else:
                 assert msg is None, (
                     f"msg: {msg}\nout: {captured.out}\nerr: {captured.err}"
