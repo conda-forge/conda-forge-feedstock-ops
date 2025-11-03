@@ -3,8 +3,7 @@ import logging
 import os
 import pprint
 import subprocess
-from collections.abc import Iterable
-from typing import Callable, Optional
+from collections.abc import Callable, Iterable
 
 from conda_forge_feedstock_ops.settings import FeedstockOpsSettings
 
@@ -111,10 +110,10 @@ def run_container_operation(
     args: Iterable[str],
     json_loads: Callable = json.loads,
     tmpfs_size_mb: int = DEFAULT_CONTAINER_TMPFS_SIZE_MB,
-    input: Optional[str] = None,
-    mount_dir: Optional[str] = None,
+    input: str | None = None,
+    mount_dir: str | None = None,
     mount_readonly: bool = True,
-    extra_container_args: Optional[Iterable[str]] = None,
+    extra_container_args: Iterable[str] | None = None,
 ):
     """Run a feedstock operation in a container.
 
@@ -242,7 +241,7 @@ def run_container_operation(
     return ret["data"]
 
 
-def should_use_container(use_container: Optional[bool] = None):
+def should_use_container(use_container: bool | None = None):
     """Determine if we should use a container.
 
     Parameters
