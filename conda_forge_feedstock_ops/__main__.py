@@ -145,7 +145,7 @@ def _execute_git_cmds_and_report(*, cmds, cwd, msg, ignore_stderr=False):
     return _output
 
 
-def _rerender_feedstock(*, timeout):
+def _rerender_feedstock(*, exclusive_config_file, timeout):
     from conda_forge_feedstock_ops.os_utils import (
         get_user_execute_permissions,
         reset_permissions_with_user_execute,
@@ -209,10 +209,12 @@ def _rerender_feedstock(*, timeout):
             ignore_stderr=True,
         ).strip()
 
+        kwargs = {}
         if timeout is not None:
             kwargs = {"timeout": timeout}
-        else:
-            kwargs = {}
+        if exclusive_config_file is not None:
+            kwargs["exclusive_config_file"] = exclusive_config_file
+
         msg = rerender_local(fs_dir, **kwargs)
 
         if logger.getEffectiveLevel() <= logging.DEBUG:
@@ -338,12 +340,22 @@ def main_container():
 @main_container.command(name="rerender")
 @log_level_option
 @click.option("--timeout", default=None, type=int, help="The timeout for the rerender.")
-def main_container_rerender(log_level, timeout):
+@click.option(
+    "--exclusive-config-file",
+    default=None,
+    type=str,
+    help=(
+        "A conda-build-type pinnings file to use instead of the latest "
+        "copy of the pinnings from the conda-forge-pinning repo."
+    ),
+)
+def main_container_rerender(log_level, timeout, exclusive_config_file):
     return _run_bot_task(
         _rerender_feedstock,
         log_level=log_level,
         existing_feedstock_node_attrs=None,
         timeout=timeout,
+        exclusive_config_file=exclusive_config_file,
     )
 
 

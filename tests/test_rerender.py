@@ -3,6 +3,7 @@ import os
 import subprocess
 import tempfile
 
+import pytest
 from conftest import skipif_no_containers
 
 from conda_forge_feedstock_ops.os_utils import (
@@ -99,8 +100,20 @@ def test_rerender_local_git_staged():
         assert found_it, ret.stdout
 
 
+@pytest.mark.parametrize("use_exclusive_config_file", [False, True])
 @skipif_no_containers
-def test_rerender_containerized_same_as_local_own_feedstock(use_containers, capfd):
+def test_rerender_containerized_same_as_local_own_feedstock(
+    use_containers, capfd, use_exclusive_config_file
+):
+    if use_exclusive_config_file:
+        rrnd_kwargs = {
+            "exclusive_config_file": os.path.abspath(
+                os.path.expandvars("${CONDA_PREFIX}/conda_build_config.yaml")
+            )
+        }
+    else:
+        rrnd_kwargs = {}
+
     with (
         tempfile.TemporaryDirectory() as tmpdir_cont,
         tempfile.TemporaryDirectory() as tmpdir_local,
@@ -136,6 +149,7 @@ def test_rerender_containerized_same_as_local_own_feedstock(use_containers, capf
                     os.path.join(
                         tmpdir_cont, "conda-forge-feedstock-check-solvable-feedstock"
                     ),
+                    **rrnd_kwargs,
                 )
             finally:
                 captured = capfd.readouterr()
@@ -184,6 +198,7 @@ def test_rerender_containerized_same_as_local_own_feedstock(use_containers, capf
                     os.path.join(
                         tmpdir_local, "conda-forge-feedstock-check-solvable-feedstock"
                     ),
+                    **rrnd_kwargs,
                 )
             finally:
                 local_captured = capfd.readouterr()
