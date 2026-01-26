@@ -209,10 +209,15 @@ def test_rerender_containerized_same_as_local_own_feedstock(
             with pushd("conda-forge-feedstock-check-solvable-feedstock"):
                 assert os.path.exists(".azure-pipelines/azure-pipelines-linux.yml")
 
-        assert (
-            msg.split("conda-forge-pinning")[1]
-            == local_msg.split("conda-forge-pinning")[1]
-        )
+        if not use_exclusive_config_file:
+            assert (
+                msg.split("conda-forge-pinning")[1]
+                == local_msg.split("conda-forge-pinning")[1]
+            )
+        else:
+            assert "conda-forge-pinning" not in msg
+            assert "conda-forge-pinning" not in local_msg
+            assert msg == local_msg
 
         # now compare files
         cont_fnames = set(
