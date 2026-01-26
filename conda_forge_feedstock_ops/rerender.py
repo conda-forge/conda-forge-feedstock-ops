@@ -110,7 +110,10 @@ def rerender_containerized(feedstock_dir, exclusive_config_file=None, timeout=No
                 tmpdir, os.path.basename(str(exclusive_config_file))
             )
             shutil.copyfile(str(exclusive_config_file), tmp_exclusive_config_file)
-            args += ["--exclusive-config-file", os.path.basename(tmp_exclusive_config_file)]
+            args += [
+                "--exclusive-config-file",
+                os.path.basename(tmp_exclusive_config_file),
+            ]
             logger.debug(
                 "copied host exclusive config file: %s", tmp_exclusive_config_file
             )
