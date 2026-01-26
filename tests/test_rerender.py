@@ -3,6 +3,7 @@ import os
 import subprocess
 import tempfile
 
+import pytest
 from conftest import skipif_no_containers
 
 from conda_forge_feedstock_ops.os_utils import (
@@ -99,8 +100,22 @@ def test_rerender_local_git_staged():
         assert found_it, ret.stdout
 
 
+@pytest.mark.parametrize("use_exclusive_config_file", [False, True])
 @skipif_no_containers
-def test_rerender_containerized_same_as_local_own_feedstock(use_containers, capfd):
+def test_rerender_containerized_same_as_local_own_feedstock(
+    use_containers, capfd, use_exclusive_config_file
+):
+    if use_exclusive_config_file:
+        cbc_path = os.path.abspath(
+            os.path.expandvars("${CONDA_PREFIX}/conda_build_config.yaml")
+        )
+        assert os.path.exists(cbc_path), (
+            "The config file at `{cbc_path}` does not exist!"
+        )
+        rrnd_kwargs = {"exclusive_config_file": cbc_path}
+    else:
+        rrnd_kwargs = {}
+
     with (
         tempfile.TemporaryDirectory() as tmpdir_cont,
         tempfile.TemporaryDirectory() as tmpdir_local,
@@ -136,6 +151,7 @@ def test_rerender_containerized_same_as_local_own_feedstock(use_containers, capf
                     os.path.join(
                         tmpdir_cont, "conda-forge-feedstock-check-solvable-feedstock"
                     ),
+                    **rrnd_kwargs,
                 )
             finally:
                 captured = capfd.readouterr()
@@ -184,6 +200,7 @@ def test_rerender_containerized_same_as_local_own_feedstock(use_containers, capf
                     os.path.join(
                         tmpdir_local, "conda-forge-feedstock-check-solvable-feedstock"
                     ),
+                    **rrnd_kwargs,
                 )
             finally:
                 local_captured = capfd.readouterr()
@@ -192,10 +209,15 @@ def test_rerender_containerized_same_as_local_own_feedstock(use_containers, capf
             with pushd("conda-forge-feedstock-check-solvable-feedstock"):
                 assert os.path.exists(".azure-pipelines/azure-pipelines-linux.yml")
 
-        assert (
-            msg.split("conda-forge-pinning")[1]
-            == local_msg.split("conda-forge-pinning")[1]
-        )
+        if not use_exclusive_config_file:
+            assert (
+                msg.split("conda-forge-pinning")[1]
+                == local_msg.split("conda-forge-pinning")[1]
+            )
+        else:
+            assert "conda-forge-pinning" not in msg
+            assert "conda-forge-pinning" not in local_msg
+            assert msg == local_msg
 
         # now compare files
         cont_fnames = set(

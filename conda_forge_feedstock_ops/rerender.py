@@ -24,13 +24,18 @@ from conda_forge_feedstock_ops.os_utils import (
 logger = logging.getLogger(__name__)
 
 
-def rerender(feedstock_dir, timeout=None, use_container=None):
+def rerender(
+    feedstock_dir, exclusive_config_file=None, timeout=None, use_container=None
+):
     """Rerender a feedstock.
 
     Parameters
     ----------
     feedstock_dir : str
         The path to the feedstock directory.
+    exclusive_config_file : str, optional
+        A conda-build-type pinnings file to use instead of the latest copy of the pinnings
+        from the conda-forge-pinning repo.
     timeout : int, optional
         The timeout for the rerender in seconds. If None, no timeout is used.
     use_container
@@ -47,16 +52,18 @@ def rerender(feedstock_dir, timeout=None, use_container=None):
     if should_use_container(use_container=use_container):
         return rerender_containerized(
             feedstock_dir,
+            exclusive_config_file=exclusive_config_file,
             timeout=timeout,
         )
     else:
         return rerender_local(
             feedstock_dir,
+            exclusive_config_file=exclusive_config_file,
             timeout=timeout,
         )
 
 
-def rerender_containerized(feedstock_dir, timeout=None):
+def rerender_containerized(feedstock_dir, exclusive_config_file=None, timeout=None):
     """Rerender a feedstock.
 
     **This function runs the rerender in a container.**
@@ -65,6 +72,9 @@ def rerender_containerized(feedstock_dir, timeout=None):
     ----------
     feedstock_dir : str
         The path to the feedstock directory.
+    exclusive_config_file : str, optional
+        A conda-build-type pinnings file to use instead of the latest copy of the pinnings
+        from the conda-forge-pinning repo.
     timeout : int, optional
         The timeout for the rerender in seconds. If None, no timeout is used.
 
@@ -93,6 +103,20 @@ def rerender_containerized(feedstock_dir, timeout=None):
             "w",
         ) as f:
             json.dump(perms, f)
+
+        if exclusive_config_file is not None:
+            logger.debug("host exclusive config file: %s", exclusive_config_file)
+            tmp_exclusive_config_file = os.path.join(
+                tmpdir, os.path.basename(str(exclusive_config_file))
+            )
+            shutil.copyfile(str(exclusive_config_file), tmp_exclusive_config_file)
+            args += [
+                "--exclusive-config-file",
+                os.path.basename(tmp_exclusive_config_file),
+            ]
+            logger.debug(
+                "copied host exclusive config file: %s", tmp_exclusive_config_file
+            )
 
         chmod_plus_rwX(tmpdir, recursive=True)
 
@@ -218,7 +242,7 @@ def _subprocess_run_tee(args, timeout=None):
     return proc
 
 
-def rerender_local(feedstock_dir, timeout=None):
+def rerender_local(feedstock_dir, exclusive_config_file=None, timeout=None):
     """Rerender a feedstock.
 
     **This function runs the rerender in a container.**
@@ -227,6 +251,9 @@ def rerender_local(feedstock_dir, timeout=None):
     ----------
     feedstock_dir : str
         The path to the feedstock directory.
+    exclusive_config_file : str, optional
+        A conda-build-type pinnings file to use instead of the latest copy of the pinnings
+        from the conda-forge-pinning repo.
     timeout : int, optional
         The timeout for the rerender in seconds. If None, no timeout is used.
 
@@ -235,6 +262,14 @@ def rerender_local(feedstock_dir, timeout=None):
     str
         The commit message for the rerender. If None, the rerender didn't change anything.
     """
+    if exclusive_config_file is not None:
+        extra_args = [
+            "--exclusive-config-file",
+            str(exclusive_config_file),
+        ]
+    else:
+        extra_args = []
+
     with (
         pushd(feedstock_dir),
         tempfile.TemporaryDirectory() as tmpdir,
@@ -247,7 +282,8 @@ def rerender_local(feedstock_dir, timeout=None):
                 "--no-check-uptodate",
                 "--temporary-directory",
                 tmpdir,
-            ],
+            ]
+            + extra_args,
             timeout=timeout,
         )
 
