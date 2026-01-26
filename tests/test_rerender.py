@@ -106,11 +106,13 @@ def test_rerender_containerized_same_as_local_own_feedstock(
     use_containers, capfd, use_exclusive_config_file
 ):
     if use_exclusive_config_file:
-        rrnd_kwargs = {
-            "exclusive_config_file": os.path.abspath(
-                os.path.expandvars("${CONDA_PREFIX}/conda_build_config.yaml")
-            )
-        }
+        cbc_path = os.path.abspath(
+            os.path.expandvars("${CONDA_PREFIX}/conda_build_config.yaml")
+        )
+        assert os.path.exists(cbc_path), (
+            "The config file at `{cbc_path}` does not exist!"
+        )
+        rrnd_kwargs = {"exclusive_config_file": cbc_path}
     else:
         rrnd_kwargs = {}
 
