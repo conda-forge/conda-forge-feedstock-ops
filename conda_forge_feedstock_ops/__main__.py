@@ -213,7 +213,10 @@ def _rerender_feedstock(*, exclusive_config_file, timeout):
         if timeout is not None:
             kwargs = {"timeout": timeout}
         if exclusive_config_file is not None:
-            kwargs["exclusive_config_file"] = exclusive_config_file
+            kwargs["exclusive_config_file"] = os.path.join(
+                "/cf_feedstock_ops_dir",
+                os.path.basename(exclusive_config_file),
+            )
 
         msg = rerender_local(fs_dir, **kwargs)
 
