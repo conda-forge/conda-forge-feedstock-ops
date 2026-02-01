@@ -8,7 +8,8 @@ import pytest
 
 from conda_forge_feedstock_ops.rattler_solver import rattler_solver_factory
 
-FEEDSTOCK_DIR = os.path.join(os.path.dirname(__file__), "data", "test_feedstock")
+DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
+FEEDSTOCK_DIR = os.path.join(DATA_DIR, "test_feedstock")
 ALL_SOLVERS = ["rattler"]
 
 

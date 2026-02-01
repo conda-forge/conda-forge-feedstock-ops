@@ -89,7 +89,9 @@ class FakeRepoData:
 
         (self.base_path / subdir).mkdir(exist_ok=True)
         (self.base_path / subdir / "repodata.json").write_text(
-            orjson.dumps(out, sort_keys=True)
+            orjson.dumps(out, option=orjson.OPT_SORT_KEYS | orjson.OPT_INDENT_2).decode(
+                "utf-8"
+            )
         )
 
     def write(self):

@@ -144,7 +144,7 @@ def print_debug(fmt, *args):
 @contextlib.contextmanager
 def suppress_output():
     settings = FeedstockOpsSettings()
-    if settings.debug.lower() == "true" or VERBOSITY > 2:
+    if str(settings.debug).lower() == "true" or VERBOSITY > 2:
         suppress = False
     else:
         suppress = True

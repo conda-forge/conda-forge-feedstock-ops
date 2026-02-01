@@ -1,5 +1,4 @@
 import glob
-import json
 import logging
 import os
 import pprint
@@ -8,6 +7,7 @@ import tempfile
 
 import conda_build.config
 import conda_build.variants
+import orjson
 import psutil
 from ruamel.yaml import YAML
 
@@ -105,7 +105,7 @@ def is_recipe_solvable(
             str(logging.getLevelName(logger.getEffectiveLevel())).upper()
         )
         logger.debug(
-            "is_recipe_solver log-level=%d -> verbosity=%d",
+            "is_recipe_solver log-level=%s -> verbosity=%d",
             logging.getLevelName(logger.getEffectiveLevel()),
             verbosity,
         )
@@ -163,7 +163,7 @@ def _is_recipe_solvable_containerized(
         args += ["--additional-channels", ",".join(additional_channels)]
 
     if build_platform:
-        args += ["--build-platform", json.dumps(build_platform).decode("utf-8")]
+        args += ["--build-platform", orjson.dumps(build_platform).decode("utf-8")]
 
     if fail_fast:
         args += ["--fail-fast"]

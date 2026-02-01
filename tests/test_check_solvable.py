@@ -2,18 +2,20 @@ import os
 import pathlib
 import pprint
 import subprocess
+import tempfile
 from textwrap import dedent
 
 import pytest
+from conftest import DATA_DIR, skipif_no_containers
 from flaky import flaky
 
 from conda_forge_feedstock_ops.check_solvable import is_recipe_solvable
+from conda_forge_feedstock_ops.os_utils import pushd
 from conda_forge_feedstock_ops.virtual_packages import (
     FakePackage,
     FakeRepoData,
 )
 
-FEEDSTOCK_DIR = os.path.join(os.path.dirname(__file__), "data", "test_feedstock")
 VERB = 1
 
 
@@ -142,7 +144,7 @@ extra:
 
 @flaky
 def test_r_base_cross_solvable(solver):
-    feedstock_dir = os.path.join(os.path.dirname(__file__), "r-base-feedstock")
+    feedstock_dir = os.path.join(DATA_DIR, "r-base-feedstock")
     solvable, errors, _ = is_recipe_solvable(
         feedstock_dir, solver=solver, verbosity=VERB
     )
@@ -181,7 +183,7 @@ def test_xgboost_solvable(tmp_path, solver):
 
 @flaky
 def test_pandas_solvable(solver):
-    feedstock_dir = os.path.join(os.path.dirname(__file__), "pandas-feedstock")
+    feedstock_dir = os.path.join(DATA_DIR, "pandas-feedstock")
     solvable, errors, _ = is_recipe_solvable(
         feedstock_dir,
         solver=solver,
@@ -195,7 +197,7 @@ def test_pandas_solvable(solver):
 
 @flaky
 def test_hpp_fcl_solvable_runs(solver):
-    feedstock_dir = os.path.join(os.path.dirname(__file__), "hpp-fcl-feedstock")
+    feedstock_dir = os.path.join(DATA_DIR, "hpp-fcl-feedstock")
     is_recipe_solvable(
         feedstock_dir,
         solver=solver,
@@ -211,7 +213,7 @@ def test_hpp_fcl_solvable_runs(solver):
 
 @flaky
 def test_biopython_solvable_runs(solver):
-    feedstock_dir = os.path.join(os.path.dirname(__file__), "biopython-feedstock")
+    feedstock_dir = os.path.join(DATA_DIR, "biopython-feedstock")
     is_recipe_solvable(
         feedstock_dir,
         solver=solver,
@@ -223,7 +225,7 @@ def test_biopython_solvable_runs(solver):
 @flaky
 def test_guiqwt_solvable(tmp_path, solver):
     """test for run exports as a single string in pyqt"""
-    feedstock_dir = os.path.join(os.path.dirname(__file__), "guiqwt-feedstock")
+    feedstock_dir = os.path.join(DATA_DIR, "guiqwt-feedstock")
     solvable, errors, solvable_by_variant = is_recipe_solvable(
         feedstock_dir,
         solver=solver,
@@ -647,3 +649,46 @@ def test_v1_unsolvable(tmp_path):
     assert solvable is False
 
     print(errors[0])
+
+
+@skipif_no_containers
+def test_container_tasks_is_recipe_solvable_containerized(use_containers):
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with pushd(tmpdir):
+            subprocess.run(
+                [
+                    "git",
+                    "clone",
+                    "https://github.com/conda-forge/conda-forge-feedstock-check-solvable-feedstock.git",
+                ]
+            )
+
+        res_cont = is_recipe_solvable(
+            os.path.join(tmpdir, "conda-forge-feedstock-check-solvable-feedstock"),
+            use_container=True,
+        )
+        assert res_cont[0], res_cont
+
+        res_local = is_recipe_solvable(
+            os.path.join(tmpdir, "conda-forge-feedstock-check-solvable-feedstock"),
+            use_container=False,
+        )
+        assert res_local[0], res_local
+
+        assert res_cont == res_local
+
+
+@skipif_no_containers
+def test_hpp_fcl_solvable_runs_containers(solver, use_containers):
+    feedstock_dir = os.path.join(DATA_DIR, "hpp-fcl-feedstock")
+    is_recipe_solvable(
+        feedstock_dir,
+        solver=solver,
+        verbosity=VERB,
+        build_platform=dict(
+            linux_aarch64="linux_64",
+            linux_ppc64le="linux_64",
+            osx_arm64="osx_64",
+        ),
+        use_container=True,
+    )
