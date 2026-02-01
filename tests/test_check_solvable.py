@@ -13,7 +13,7 @@ from conda_forge_feedstock_ops.virtual_packages import (
     FakeRepoData,
 )
 
-FEEDSTOCK_DIR = os.path.join(os.path.dirname(__file__), "test_feedstock")
+FEEDSTOCK_DIR = os.path.join(os.path.dirname(__file__), "data", "test_feedstock")
 VERB = 1
 
 
@@ -75,6 +75,7 @@ extra:
         verbosity=VERB,
         timeout=None,
         fail_fast=True,
+        use_container=False,
     )[0]
 
 
@@ -128,6 +129,7 @@ extra:
         solver=solver,
         verbosity=VERB,
         timeout=None,
+        use_container=False,
     )
     print(solvable_by_variant)
     assert not solvable
@@ -153,6 +155,7 @@ def test_r_base_cross_solvable(solver):
         verbosity=VERB,
         timeout=None,
         fail_fast=True,
+        use_container=False,
     )
     assert solvable, pprint.pformat(errors)
 
@@ -171,6 +174,7 @@ def test_xgboost_solvable(tmp_path, solver):
         verbosity=VERB,
         timeout=None,
         fail_fast=True,
+        use_container=False,
     )
     assert solvable, pprint.pformat(errors)
 
@@ -184,6 +188,7 @@ def test_pandas_solvable(solver):
         verbosity=VERB,
         timeout=None,
         fail_fast=True,
+        use_container=False,
     )
     assert solvable, pprint.pformat(errors)
 
@@ -200,6 +205,7 @@ def test_hpp_fcl_solvable_runs(solver):
             linux_ppc64le="linux_64",
             osx_arm64="osx_64",
         ),
+        use_container=False,
     )
 
 
@@ -210,6 +216,7 @@ def test_biopython_solvable_runs(solver):
         feedstock_dir,
         solver=solver,
         verbosity=VERB,
+        use_container=False,
     )
 
 
@@ -223,6 +230,7 @@ def test_guiqwt_solvable(tmp_path, solver):
         verbosity=VERB,
         timeout=None,
         fail_fast=True,
+        use_container=False,
     )
     pprint.pprint(solvable_by_variant)
     assert solvable, pprint.pformat(errors)
@@ -241,6 +249,7 @@ def test_arrow_solvable(tmp_path, solver):
         verbosity=VERB,
         timeout=None,
         fail_fast=True,
+        use_container=False,
     )
     pprint.pprint(solvable_by_variant)
     assert solvable, pprint.pformat(errors)
@@ -260,6 +269,7 @@ def test_datalad_solvable(tmp_path, solver):
         verbosity=VERB,
         timeout=None,
         fail_fast=True,
+        use_container=False,
     )
     pprint.pprint(solvable_by_variant)
     assert solvable, pprint.pformat(errors)
@@ -279,6 +289,7 @@ def test_grpcio_solvable(tmp_path, solver):
         verbosity=VERB,
         timeout=None,
         fail_fast=True,
+        use_container=False,
     )
     pprint.pprint(solvable_by_variant)
     assert solvable, pprint.pformat(errors)
@@ -298,6 +309,7 @@ def test_dftbplus_solvable(tmp_path, solver):
         verbosity=VERB,
         timeout=None,
         fail_fast=True,
+        use_container=False,
     )
     pprint.pprint(solvable_by_variant)
     assert solvable, pprint.pformat(errors)
@@ -322,6 +334,7 @@ def test_cupy_solvable_at_commit(tmp_path, solver):
         verbosity=VERB,
         timeout=None,
         fail_fast=True,
+        use_container=False,
     )
     pprint.pprint(solvable_by_variant)
     assert solvable, pprint.pformat(errors)
@@ -339,6 +352,7 @@ def test_cupy_solvable(tmp_path, solver):
         verbosity=VERB,
         timeout=None,
         fail_fast=True,
+        use_container=False,
     )
     pprint.pprint(solvable_by_variant)
     assert solvable, pprint.pformat(errors)
@@ -396,6 +410,7 @@ def test_run_exports_constrains_conflict(feedstock_dir, tmp_path_factory, solver
         verbosity=VERB,
         timeout=None,
         fail_fast=True,
+        use_container=False,
     )
     assert solvable, pprint.pformat(errors)
 
@@ -441,6 +456,7 @@ def test_run_exports_constrains_notok(feedstock_dir, tmp_path_factory, solver):
         solver=solver,
         verbosity=VERB,
         timeout=None,
+        use_container=False,
     )
     assert not solvable, pprint.pformat(errors)
 
@@ -491,7 +507,11 @@ extra:
 """,
         )
     assert not is_recipe_solvable(
-        feedstock_dir, solver=solver, verbosity=VERB, timeout=None
+        feedstock_dir,
+        solver=solver,
+        verbosity=VERB,
+        timeout=None,
+        use_container=False,
     )[0]
 
 
@@ -510,6 +530,7 @@ def test_arrow_solvable_timeout(tmp_path, solver):
             solver=solver,
             verbosity=VERB,
             fail_fast=True,
+            use_container=False,
         )
         assert solvable
         assert errors == []
@@ -586,6 +607,7 @@ python_impl:
         verbosity=VERB,
         timeout=None,
         fail_fast=True,
+        use_container=False,
     )
     pprint.pprint(solvable_by_variant)
     assert solvable, pprint.pformat(errors)
@@ -605,6 +627,7 @@ def test_jolt_physics_rattler(tmp_path):
         verbosity=VERB,
         timeout=None,
         fail_fast=True,
+        use_container=False,
     )
     pprint.pprint(solvable_by_variant)
     assert solvable, pprint.pformat(errors)
@@ -619,6 +642,7 @@ def test_v1_unsolvable(tmp_path):
         verbosity=VERB,
         timeout=None,
         fail_fast=True,
+        use_container=False,
     )
     assert solvable is False
 
