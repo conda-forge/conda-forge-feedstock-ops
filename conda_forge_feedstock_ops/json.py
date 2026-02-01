@@ -5,19 +5,25 @@ from typing import (
     Any,
 )
 
-import rapidjson as json
+import orjson
 
 logger = logging.getLogger(__name__)
 
 
 def default(obj: Any) -> Any:
-    """For custom object serialization."""
+    """For custom object serialization.
+
+    Raises
+    ------
+    TypeError
+        If the object is not JSON serializable.
+    """
     if isinstance(obj, set):
         return {"__set__": True, "elements": sorted(obj)}
     raise TypeError(repr(obj) + " is not JSON serializable")
 
 
-def object_hook(dct: dict) -> Any:
+def object_hook(dct: dict) -> set | dict:
     """For custom object deserialization."""
     if "__set__" in dct:
         return set(dct["elements"])
@@ -26,53 +32,50 @@ def object_hook(dct: dict) -> Any:
 
 def dumps(
     obj: Any,
-    sort_keys: bool = True,
-    separators: Any = (",", ":"),
-    default: "Callable[[Any], Any]" = default,
-    **kwargs: Any,
+    default: Callable[[Any], Any] = default,
 ) -> str:
-    """Returns a JSON string from a Python object."""
-    return json.dumps(
+    """Return a JSON string from a Python object."""
+    return orjson.dumps(
         obj,
-        sort_keys=sort_keys,
-        # separators=separators,
+        option=orjson.OPT_SORT_KEYS | orjson.OPT_INDENT_2,
         default=default,
-        indent=1,
-        **kwargs,
-    )
+    ).decode("utf-8")
 
 
 def dump(
     obj: Any,
     fp: IO[str],
-    sort_keys: bool = True,
-    separators: Any = (",", ":"),
-    default: "Callable[[Any], Any]" = default,
-    **kwargs: Any,
+    default: Callable[[Any], Any] = default,
 ) -> None:
-    """Returns a JSON string from a Python object."""
-    return json.dump(
-        obj,
-        fp,
-        sort_keys=sort_keys,
-        # separators=separators,
-        default=default,
-        indent=1,
-        **kwargs,
-    )
+    fp.write(dumps(obj, default=default))
 
 
-def loads(
-    s: str, object_hook: "Callable[[dict], Any]" = object_hook, **kwargs: Any
-) -> dict:
-    """Loads a string as JSON, with appropriate object hooks"""
-    return json.loads(s, object_hook=object_hook, **kwargs)
+def _call_object_hook(
+    data: Any,
+    object_hook: Callable[[dict], Any],
+) -> Any:
+    """Recursively calls object_hook depth-first."""
+    if isinstance(data, list):
+        return [_call_object_hook(d, object_hook) for d in data]
+    elif isinstance(data, dict):
+        for k in data:
+            data[k] = _call_object_hook(data[k], object_hook)
+        return object_hook(data)
+    else:
+        return data
+
+
+def loads(s: str, object_hook: Callable[[dict], Any] = object_hook) -> dict:
+    """Load a string as JSON, with appropriate object hooks."""
+    data = orjson.loads(s)
+    if object_hook is not None:
+        data = _call_object_hook(data, object_hook)
+    return data
 
 
 def load(
     fp: IO[str],
-    object_hook: "Callable[[dict], Any]" = object_hook,
-    **kwargs: Any,
+    object_hook: Callable[[dict], Any] = object_hook,
 ) -> dict:
-    """Loads a file object as JSON, with appropriate object hooks."""
-    return json.load(fp, object_hook=object_hook, **kwargs)
+    """Load a file object as JSON, with appropriate object hooks."""
+    return loads(fp.read())

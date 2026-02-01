@@ -6,13 +6,24 @@ platforms:
   - osx-64
   - osx-arm64
 dependencies:
+  - boltons >=23.0.0
   - click
+  - conda
   - conda-build >=3.27
+  - conda-forge-metadata >=0.11.0
+  - conda-package-handling
   - conda-smithy >=3.40
+  - orjson
+  - pixi
+  - py-rattler >=0.21.0,<0.22a0
   - pydantic-settings >=2.8.1,<3.0.0
-  - python-rapidjson
-  - pyyaml
+  - python >=3.11
   - rattler-build-conda-compat >=0.0.2,<2.0.0a0
+  - requests
+  - ruamel.yaml
+  - ruamel.yaml.jinja2
+  - wurlitzer
+  - zstandard
   # dev dependencies
   - pip
   - setuptools

@@ -11,7 +11,7 @@ from conda_build.metadata import MetaData
 from conda_build.variants import combine_specs, parse_config_file
 from conda_smithy.utils import get_feedstock_name_from_meta
 from rattler_build_conda_compat.render import MetaData as RattlerBuildMetaData
-from yaml import safe_load
+from ruamel.yaml import YAML
 
 from conda_forge_feedstock_ops.container_utils import (
     get_default_log_level_args,
@@ -144,8 +144,9 @@ def _determine_build_tool(feedstock_root):
     if feedstock_root and os.path.exists(
         os.path.join(feedstock_root, "conda-forge.yml")
     ):
+        yaml = YAML(typ="safe")
         with open(os.path.join(feedstock_root, "conda-forge.yml")) as f:
-            conda_forge_config = safe_load(f)
+            conda_forge_config = yaml.load(f)
 
             if conda_forge_config.get("conda_build_tool", CONDA_BUILD) == RATTLER_BUILD:
                 build_tool = RATTLER_BUILD
@@ -167,8 +168,9 @@ def _get_built_distribution_names_and_subdirs(
     if build_tool == RATTLER_BUILD:
         # cribbed from conda_forge_ci_setup.utils
         # some conda-build magic here
+        yaml = YAML(typ="safe")
         with open(variant[-1]) as f:
-            final_variant = safe_load(f)
+            final_variant = yaml.load(f)
         if "target_platform" in final_variant:
             target_platform = final_variant["target_platform"][0]
             if target_platform != "noarch":

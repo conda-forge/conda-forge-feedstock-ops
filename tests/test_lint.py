@@ -14,6 +14,12 @@ def test_lint_local():
     assert len(hints) + len(lints) > 0
     all_keys = set(lints.keys()) | set(hints.keys()) | set(errors.keys())
     assert all_keys == {
+        "hpp-fcl-feedstock/recipe/meta.yaml",
+        "biopython-feedstock/recipe/meta.yaml",
+        "pandas-feedstock/recipe/meta.yaml",
+        "guiqwt-feedstock/recipe/meta.yaml",
+        "r-base-feedstock/recipe/meta.yaml",
+        "v1-unsolvable-feedstock/recipe/recipe.yaml",
         "llvmdev-feedstock/recipe/meta.yaml",
         "ngmix-blah/recipe/meta.yaml",
     }
@@ -30,6 +36,12 @@ def test_lint_container(use_containers):
     assert len(hints) + len(lints) > 0
     all_keys = set(lints.keys()) | set(hints.keys()) | set(errors.keys())
     assert all_keys == {
+        "hpp-fcl-feedstock/recipe/meta.yaml",
+        "biopython-feedstock/recipe/meta.yaml",
+        "pandas-feedstock/recipe/meta.yaml",
+        "guiqwt-feedstock/recipe/meta.yaml",
+        "r-base-feedstock/recipe/meta.yaml",
+        "v1-unsolvable-feedstock/recipe/recipe.yaml",
         "llvmdev-feedstock/recipe/meta.yaml",
         "ngmix-blah/recipe/meta.yaml",
     }
