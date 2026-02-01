@@ -344,7 +344,7 @@ def _check_solvable(
     solver,
     fail_fast,
 ):
-    from conda_forge_feedstock_ops.solver_checks import is_recipe_solvable
+    from conda_forge_feedstock_ops.check_solvable import is_recipe_solvable
 
     logger = logging.getLogger("conda_forge_tick.container")
 
