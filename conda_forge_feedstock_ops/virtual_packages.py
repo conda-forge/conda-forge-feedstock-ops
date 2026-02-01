@@ -1,0 +1,177 @@
+import atexit
+import functools
+import os
+import pathlib
+import tempfile
+import time
+from collections import defaultdict
+from collections.abc import Iterable
+from dataclasses import dataclass, field
+
+import rapidjson as json
+
+from conda_forge_feedstock_ops.utils import (
+    ALL_PLATFORMS,
+    ARCHSPEC_X86_64_VERSIONS,
+    MAX_GLIBC_MINOR,
+    MINIMUM_CUDA_VERS,
+    MINIMUM_OSX_64_VERS,
+    MINIMUM_OSX_ARM64_VERS,
+    print_debug,
+)
+
+
+@dataclass(frozen=True)
+class FakePackage:
+    name: str
+    version: str = "1.0"
+    build_string: str = ""
+    build_number: int = 0
+    noarch: str = ""
+    depends: frozenset[str] = field(default_factory=frozenset)
+    timestamp: int = field(
+        default_factory=lambda: int(time.mktime(time.gmtime()) * 1000),
+    )
+    # Give the option of overriding the build field
+    build: str | None = None
+
+    def to_repodata_entry(self):
+        out = self.__dict__.copy()
+        if self.build is not None:
+            build = f"{self.build}"
+        elif self.build_string:
+            build = f"{self.build_string}_{self.build_number}"
+        else:
+            build = f"{self.build_number}"
+        out["depends"] = list(out["depends"])
+        out["build"] = build
+        # add an empty run exports for rattler-build
+        out["run_exports"] = {}
+        fname = f"{self.name}-{self.version}-{build}.tar.bz2"
+        return fname, out
+
+
+class FakeRepoData:
+    def __init__(self, base_dir: pathlib.Path):
+        self.base_path = base_dir
+        self.packages_by_subdir: dict[FakePackage, set[str]] = defaultdict(set)
+
+    @property
+    def channel_url(self):
+        return f"file://{str(self.base_path.absolute())}"
+
+    def add_package(self, package: FakePackage, subdirs: Iterable[str] = ()):
+        subdirs = frozenset(subdirs)
+        if not subdirs:
+            subdirs = frozenset(["noarch"])
+        self.packages_by_subdir[package].update(subdirs)
+
+    def _write_subdir(self, subdir):
+        packages = {}
+        out = {
+            "info": {"subdir": subdir},
+            "packages": packages,
+            "packages.conda": {},
+            "removed": [],
+            "repodata_version": 1,
+        }
+        for pkg, subdirs in self.packages_by_subdir.items():
+            if subdir not in subdirs:
+                continue
+            fname, info_dict = pkg.to_repodata_entry()
+            info_dict["subdir"] = subdir
+            if subdir == "noarch":
+                info_dict["noarch"] = "generic"
+            else:
+                if "noarch" in info_dict:
+                    del info_dict["noarch"]
+            packages[fname] = info_dict
+
+        (self.base_path / subdir).mkdir(exist_ok=True)
+        (self.base_path / subdir / "repodata.json").write_text(
+            json.dumps(out, sort_keys=True)
+        )
+
+    def write(self):
+        all_subdirs = ALL_PLATFORMS.copy()
+        all_subdirs.add("noarch")
+        for subdirs in self.packages_by_subdir.values():
+            all_subdirs.update(subdirs)
+
+        for subdir in all_subdirs:
+            self._write_subdir(subdir)
+
+        print_debug("Wrote fake repodata to %s", self.base_path)
+        import glob
+
+        for filename in glob.iglob(str(self.base_path / "**"), recursive=True):
+            print_debug(filename)
+        print_debug("repo: %s", self.channel_url)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.write()
+
+
+@functools.lru_cache(maxsize=1)
+def virtual_package_repodata():
+    # TODO: we might not want to use TemporaryDirectory
+    import shutil
+
+    # tmp directory in github actions
+    runner_tmp = os.environ.get("RUNNER_TEMP")
+    tmp_dir = tempfile.mkdtemp(dir=runner_tmp)
+
+    if not runner_tmp:
+        # no need to bother cleaning up on CI
+        def clean():
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+
+        atexit.register(clean)
+
+    tmp_path = pathlib.Path(tmp_dir)
+    repodata = FakeRepoData(tmp_path)
+
+    # archspec
+    for microarch in ARCHSPEC_X86_64_VERSIONS:
+        # We have to manually override "build" here to prevent "_0" from being appended
+        repodata.add_package(
+            FakePackage("__archspec", "1", build=microarch),
+            subdirs=[subdir for subdir in ALL_PLATFORMS if subdir.endswith("-64")],
+        )
+
+    # glibc
+    for glibc_minor in range(12, MAX_GLIBC_MINOR + 1):
+        repodata.add_package(FakePackage("__glibc", f"2.{glibc_minor:d}"))
+
+    # cuda
+    cuda_vers = set(MINIMUM_CUDA_VERS)
+    for cuda_ver in cuda_vers:
+        repodata.add_package(FakePackage("__cuda", cuda_ver))
+
+    for osx_ver in MINIMUM_OSX_64_VERS:
+        repodata.add_package(FakePackage("__osx", osx_ver), subdirs=["osx-64"])
+    for osx_ver in MINIMUM_OSX_ARM64_VERS:
+        repodata.add_package(
+            FakePackage("__osx", osx_ver), subdirs=["osx-arm64", "osx-64"]
+        )
+
+    repodata.add_package(
+        FakePackage("__win", "0"),
+        subdirs=list(subdir for subdir in ALL_PLATFORMS if subdir.startswith("win")),
+    )
+    repodata.add_package(
+        FakePackage("__linux", "0"),
+        subdirs=list(subdir for subdir in ALL_PLATFORMS if subdir.startswith("linux")),
+    )
+    repodata.add_package(
+        FakePackage("__unix", "0"),
+        subdirs=list(
+            subdir for subdir in ALL_PLATFORMS if not subdir.startswith("win")
+        ),
+    )
+    repodata.write()
+
+    return repodata.channel_url

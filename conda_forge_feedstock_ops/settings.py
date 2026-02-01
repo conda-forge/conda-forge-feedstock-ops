@@ -44,6 +44,11 @@ class FeedstockOpsSettings(BaseSettings):
     The Docker image tag to use for the container. Defaults to the current version of this package.
     """
 
+    debug: bool = "false"
+    """
+    Set to "true" to produce debugging output.
+    """
+
     in_container: bool = False
     """
     Whether the code is already running inside a container.
