@@ -12,6 +12,7 @@ authors = [
     {name = "conda-forge-tick development team", email = "condaforge@gmail.com"},
 ]
 description = "A package of containerized feedstock maintenance operations"
+requires-python = ">=3.11"
 dynamic = ["version"]
 license = {file = "LICENSE"}
 readme = "README.md"
