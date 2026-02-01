@@ -8,6 +8,7 @@ import psutil
 from ruamel.yaml import YAML
 
 import conda_forge_feedstock_ops.utils
+from conda_forge_feedstock_ops.os_utils import override_env
 from conda_forge_feedstock_ops.rattler_build import invoke_rattler_build
 from conda_forge_feedstock_ops.rattler_solver import rattler_solver_factory
 from conda_forge_feedstock_ops.utils import (
@@ -17,7 +18,6 @@ from conda_forge_feedstock_ops.utils import (
     apply_pins,
     conda_build_api_render,
     get_run_exports,
-    override_env,
     print_debug,
     print_info,
     print_warning,
