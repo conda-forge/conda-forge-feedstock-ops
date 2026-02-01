@@ -47,6 +47,8 @@ def is_recipe_solvable(
     timeout=600,
     verbosity=None,
     build_platform=None,
+    solver="rattler",
+    fail_fast=False,
     use_container=None,
 ):
     """Compute if a recipe is solvable.
@@ -71,6 +73,11 @@ def is_recipe_solvable(
         (gobbs of output).
     build_platform : dict, optional
         The `build_platform` section of the `conda-forge.yml` file.`
+    solver : str
+        The solver to use. One of `mamba` or `rattler`.
+    fail_fast : bool
+        If True, then the function will return as soon as it finds a non-solvable
+        configuration.
     use_container : bool, optional
         Whether to use a container to run the version parsing.
         If None, the function will use a container if the environment
@@ -110,6 +117,8 @@ def is_recipe_solvable(
             timeout=timeout,
             build_platform=build_platform,
             verbosity=verbosity,
+            solver=solver,
+            fail_fast=fail_fast,
         )
     else:
         return _is_recipe_solvable_local(
@@ -118,6 +127,8 @@ def is_recipe_solvable(
             timeout=timeout,
             build_platform=build_platform,
             verbosity=verbosity,
+            solver=solver,
+            fail_fast=fail_fast,
         )
 
 
@@ -127,6 +138,8 @@ def _is_recipe_solvable_containerized(
     timeout=600,
     build_platform=None,
     verbosity=1,
+    solver="rattler",
+    fail_fast=False,
 ):
     """Compute if a recipe is solvable.
 
@@ -135,12 +148,14 @@ def _is_recipe_solvable_containerized(
     See the docstring of `is_recipe_solvable` for inputs and outputs.
     """
     args = [
-        "conda-forge-tick-container",
+        "conda-forge-feedstock-ops-container",
         "check-solvable",
         "--timeout",
         str(timeout),
         "--verbosity",
         str(verbosity),
+        "--solver",
+        str(solver),
     ]
     args += get_default_log_level_args(logger)
 
@@ -149,6 +164,9 @@ def _is_recipe_solvable_containerized(
 
     if build_platform:
         args += ["--build-platform", json.dumps(build_platform).decode("utf-8")]
+
+    if fail_fast:
+        args += ["--fail-fast"]
 
     with tempfile.TemporaryDirectory() as tmpdir:
         tmp_feedstock_dir = os.path.join(tmpdir, os.path.basename(feedstock_dir))
@@ -190,42 +208,7 @@ def _is_recipe_solvable_local(
 ) -> tuple[bool, list[str], dict[str, bool]]:
     """Compute if a recipe is solvable.
 
-    We look through each of the conda build configs in the feedstock
-    .ci_support dir and test each ones host and run requirements.
-    The final result is a logical AND of all of the results for each CI
-    support config.
-
-    Parameters
-    ----------
-    feedstock_dir : str
-        The directory of the feedstock.
-    additional_channels : list of str, optional
-        If given, these channels will be used in addition to the main ones.
-    timeout : int, optional
-        If not None, then this function will return True if the solver checks don't
-        complete before `timeout` seconds.
-    build_platform : dict, optional
-        A dictionary mapping the target platform-arch to the platform-arch to use for
-        the build. If not given, the build platform-arch will be the same as
-        the target platform-arch.
-    verbosity : int
-        An int indicating the level of verbosity from 0 (no output) to 3
-        (gobbs of output).
-    solver : str
-        The solver to use. One of `mamba` or `rattler`.
-    fail_fast : bool
-        If True, then the function will return as soon as it finds a non-solvable
-        configuration.
-
-    Returns
-    -------
-    solvable : bool
-        The logical AND of the solvability of the recipe on all platforms
-        in the CI scripts.
-    errors : list of str
-        A list of errors from the solver. Empty if recipe is solvable.
-    solvable_by_variant : dict
-        A lookup by variant config that shows if a particular config is solvable
+    See the docstring of `is_recipe_solvable` for inputs and outputs.
     """
     try:
         res = _is_recipe_solvable(

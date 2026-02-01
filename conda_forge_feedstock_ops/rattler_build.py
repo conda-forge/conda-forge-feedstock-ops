@@ -4,7 +4,7 @@ import subprocess
 import tempfile
 import uuid
 
-import yaml
+from ruamel.yaml import YAML
 
 from conda_forge_feedstock_ops.utils import clean_rattler_cache, print_debug
 from conda_forge_feedstock_ops.virtual_packages import (
@@ -49,6 +49,8 @@ def invoke_rattler_build(
                     for source in channel_sources
                 ]
 
+            yaml = YAML()
+            yaml.indent(mapping=2, sequence=4, offset=2)
             yaml.dump(
                 {k: v for k, v in variants.items()},
                 fp,

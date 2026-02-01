@@ -8,7 +8,7 @@ from collections import defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 
-import rapidjson as json
+import orjson
 
 from conda_forge_feedstock_ops.utils import (
     ALL_PLATFORMS,
@@ -89,7 +89,7 @@ class FakeRepoData:
 
         (self.base_path / subdir).mkdir(exist_ok=True)
         (self.base_path / subdir / "repodata.json").write_text(
-            json.dumps(out, sort_keys=True)
+            orjson.dumps(out, sort_keys=True)
         )
 
     def write(self):

@@ -341,6 +341,8 @@ def _check_solvable(
     verbosity,
     additional_channels,
     build_platform,
+    solver,
+    fail_fast,
 ):
     from conda_forge_feedstock_ops.solver_checks import is_recipe_solvable
 
@@ -438,7 +440,23 @@ def main_lint(log_level):
     default=None,
     help="The conda-forge.yml build_platform section as a JSON string.",
 )
-def check_solvable(log_level, timeout, verbosity, additional_channels, build_platform):
+@click.option(
+    "--solver", type=str, default="rattler", help="The backend solver to use."
+)
+@click.option(
+    "--fail-fast",
+    is_flag=True,
+    help="If passed, the solver checks fail at the first error.",
+)
+def check_solvable(
+    log_level,
+    timeout,
+    verbosity,
+    additional_channels,
+    build_platform,
+    solver,
+    fail_fast,
+):
     return _run_bot_task(
         _check_solvable,
         log_level=log_level,
@@ -447,4 +465,6 @@ def check_solvable(log_level, timeout, verbosity, additional_channels, build_pla
         verbosity=verbosity,
         additional_channels=additional_channels,
         build_platform=build_platform,
+        solver=solver,
+        fail_fast=fail_fast,
     )

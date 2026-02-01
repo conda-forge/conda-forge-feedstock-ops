@@ -12,7 +12,7 @@ from collections.abc import Mapping
 
 import conda_build.api
 import conda_package_handling.api
-import rapidjson as json
+import orjson
 import requests
 import wurlitzer
 import zstandard
@@ -282,7 +282,7 @@ def _get_run_exports_from_download(channel_url, subdir, pkg):
 
             if os.path.exists(rxpth):
                 with open(rxpth) as fp:
-                    run_exports = json.load(fp)
+                    run_exports = orjson.load(fp)
             else:
                 run_exports = {}
 
@@ -319,7 +319,7 @@ def _fetch_json_zst(url):
         return None
     compressed_binary = res.content
     binary = zstandard.decompress(compressed_binary)
-    return json.loads(binary.decode("utf-8"))
+    return orjson.loads(binary.decode("utf-8"))
 
 
 @functools.cache
