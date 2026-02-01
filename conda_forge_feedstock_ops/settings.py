@@ -44,9 +44,9 @@ class FeedstockOpsSettings(BaseSettings):
     The Docker image tag to use for the container. Defaults to the current version of this package.
     """
 
-    debug: bool = "false"
+    verbosity: int = 1
     """
-    Set to "true" to produce debugging output.
+    The verbosity of the solver checks: 0 is no output, 3 is a lot of output.
     """
 
     in_container: bool = False

@@ -94,7 +94,7 @@ PROBLEMATIC_REQS = {
 # I cannot get python logging to work correctly with all of the hacks to
 # make conda-build be quiet.
 # so this is a thing
-VERBOSITY = 1
+VERBOSITY = FeedstockOpsSettings().verbosity
 VERBOSITY_PREFIX = {
     0: "CRITICAL",
     1: "WARNING",
@@ -143,8 +143,7 @@ def print_debug(fmt, *args):
 
 @contextlib.contextmanager
 def suppress_output():
-    settings = FeedstockOpsSettings()
-    if str(settings.debug).lower() == "true" or VERBOSITY > 2:
+    if FeedstockOpsSettings().verbosity > 2:
         suppress = False
     else:
         suppress = True
@@ -282,7 +281,7 @@ def _get_run_exports_from_download(channel_url, subdir, pkg):
 
             if os.path.exists(rxpth):
                 with open(rxpth) as fp:
-                    run_exports = orjson.load(fp)
+                    run_exports = orjson.loads(fp.read())
             else:
                 run_exports = {}
 
