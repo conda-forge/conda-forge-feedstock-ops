@@ -116,7 +116,7 @@ class RattlerSolver:
 
             solution = asyncio.run(
                 solve(
-                    channels=self._channels,
+                    sources=self._channels,
                     specs=_specs,
                     platforms=self._platforms,
                     timeout=timeout,
