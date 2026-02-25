@@ -15,7 +15,7 @@ dependencies:
   - conda-smithy >=3.40
   - orjson
   - pixi
-  - py-rattler >=0.21.0,<0.22a0
+  - py-rattler >=0.21.0,<0.23a0
   - pydantic-settings >=2.8.1,<3.0.0
   - python >=3.11
   - rattler-build-conda-compat >=0.0.2,<2.0.0a0
