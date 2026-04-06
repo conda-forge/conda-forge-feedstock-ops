@@ -178,5 +178,5 @@ def virtual_package_repodata():
 
     ret_val = repodata.channel_url
     if ret_val.startswith("file://"):
-        ret_val = ret_val[len("file://"):]
+        ret_val = ret_val[len("file://") :]
     return ret_val
