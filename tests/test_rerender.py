@@ -508,7 +508,7 @@ def test_rerender_containerized_permissions(use_containers):
             }
 
             assert "build-locally.py" in keys_to_check
-            assert "scripts/build_steps.sh" in keys_to_check
+            assert ".scripts/build_steps.sh" in keys_to_check
 
             assert orig_exec == local_rerend_exec
             assert orig_exec == cont_rerend_exec
