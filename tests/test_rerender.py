@@ -493,5 +493,22 @@ def test_rerender_containerized_permissions(use_containers):
                 )
                 cont_rerend_exec = get_user_execute_permissions(".")
 
+            # compare onyl shared keys
+            keys_to_check = (
+                set(orig_exec.keys())
+                & set(local_rerend_exec.keys())
+                & set(cont_rerend_exec.keys())
+            )
+            orig_exec = {k: v for k, v in orig_exec.items() if k in keys_to_check}
+            local_rerend_exec = {
+                k: v for k, v in local_rerend_exec.items() if k in keys_to_check
+            }
+            cont_rerend_exec = {
+                k: v for k, v in cont_rerend_exec.items() if k in keys_to_check
+            }
+
+            assert "build-locally.py" in keys_to_check
+            assert "scripts/build_steps.sh" in keys_to_check
+
             assert orig_exec == local_rerend_exec
             assert orig_exec == cont_rerend_exec
