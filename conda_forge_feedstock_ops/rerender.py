@@ -276,8 +276,7 @@ def rerender_local(feedstock_dir, exclusive_config_file=None, timeout=None):
     ):
         ret = _subprocess_run_tee(
             [
-                "conda",
-                "smithy",
+                "conda-smithy",
                 "rerender",
                 "--no-check-uptodate",
                 "--temporary-directory",
