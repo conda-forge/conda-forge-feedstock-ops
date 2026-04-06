@@ -165,7 +165,7 @@ def test_rerender_containerized_same_as_local_own_feedstock(
                     f"msg: {msg}\nout: {captured.out}\nerr: {captured.err}"
                 )
                 with pushd("conda-forge-feedstock-check-solvable-feedstock"):
-                    assert os.path.exists(".azure-pipelines/azure-pipelines-linux.yml")
+                    assert os.path.exists(".github/workflows/conda-build.yml")
             else:
                 assert msg is None, (
                     f"msg: {msg}\nout: {captured.out}\nerr: {captured.err}"
@@ -207,7 +207,7 @@ def test_rerender_containerized_same_as_local_own_feedstock(
                 print(f"out: {local_captured.out}\nerr: {local_captured.err}")
 
             with pushd("conda-forge-feedstock-check-solvable-feedstock"):
-                assert os.path.exists(".azure-pipelines/azure-pipelines-linux.yml")
+                assert os.path.exists(".github/workflows/conda-build.yml")
 
         if not use_exclusive_config_file:
             assert (
