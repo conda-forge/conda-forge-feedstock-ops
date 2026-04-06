@@ -176,4 +176,7 @@ def virtual_package_repodata():
     )
     repodata.write()
 
-    return repodata.channel_url
+    ret_val = repodata.channel_url
+    if ret_val.startswith("file://"):
+        ret_val = ret_val[len("file://"):]
+    return ret_val
