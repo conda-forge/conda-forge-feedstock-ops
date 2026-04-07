@@ -364,7 +364,6 @@ def _check_solvable(
         "/cf_feedstock_ops_dir",
         use_container=False,
         timeout=timeout,
-        verbosity=verbosity,
         additional_channels=(
             additional_channels.split(",") if additional_channels else None
         ),
@@ -429,12 +428,6 @@ def main_lint(log_level):
     help="The timeout for the solver check in seconds.",
 )
 @click.option(
-    "--verbosity",
-    type=int,
-    default=1,
-    help="The verbosity of the solver check. 0 is no output, 3 is a lot of output.",
-)
-@click.option(
     "--additional-channels",
     type=str,
     default=None,
@@ -457,7 +450,6 @@ def main_lint(log_level):
 def check_solvable(
     log_level,
     timeout,
-    verbosity,
     additional_channels,
     build_platform,
     solver,
@@ -468,7 +460,6 @@ def check_solvable(
         log_level=log_level,
         existing_feedstock_node_attrs=None,
         timeout=timeout,
-        verbosity=verbosity,
         additional_channels=additional_channels,
         build_platform=build_platform,
         solver=solver,
