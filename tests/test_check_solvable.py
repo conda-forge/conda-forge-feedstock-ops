@@ -17,7 +17,7 @@ from conda_forge_feedstock_ops.virtual_packages import (
     FakeRepoData,
 )
 
-VERB = 3
+VERB = 1
 
 
 def clone_and_checkout_repo(base_path: pathlib.Path, origin_url: str, ref: str):

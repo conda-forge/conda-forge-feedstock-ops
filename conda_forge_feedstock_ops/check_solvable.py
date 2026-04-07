@@ -12,7 +12,6 @@ import orjson
 import psutil
 from ruamel.yaml import YAML
 
-import conda_forge_feedstock_ops.utils
 from conda_forge_feedstock_ops.container_utils import (
     get_default_log_level_args,
     run_container_operation,
@@ -203,7 +202,7 @@ def _is_recipe_solvable_local(
     additional_channels=None,
     timeout=600,
     build_platform=None,
-    verbosity=1,
+    verbosity=None,
     solver="rattler",
     fail_fast=False,
 ) -> tuple[bool, list[str], dict[str, bool]]:
@@ -211,16 +210,23 @@ def _is_recipe_solvable_local(
 
     See the docstring of `is_recipe_solvable` for inputs and outputs.
     """
-    try:
-        res = _is_recipe_solvable(
+
+    def _run():
+        return _is_recipe_solvable(
             feedstock_dir,
             additional_channels=additional_channels,
             build_platform=build_platform,
-            verbosity=verbosity,
             solver=solver,
             timeout_timer=TimeoutTimer(timeout if timeout is not None else 6e5),
             fail_fast=fail_fast,
         )
+
+    try:
+        if verbosity is not None:
+            with override_env("CF_FEEDSTOCK_OPS_VERBOSITY", str(verbosity)):
+                res = _run()
+        else:
+            res = _run()
     except TimeoutTimerException:
         print_warning("SOLVER TIMEOUT for %s", feedstock_dir)
         res = (
@@ -236,12 +242,10 @@ def _is_recipe_solvable(
     feedstock_dir,
     additional_channels=(),
     build_platform=None,
-    verbosity=1,
     solver="rattler",
     timeout_timer=None,
     fail_fast=False,
 ) -> tuple[bool, list[str], dict[str, bool]]:
-    conda_forge_feedstock_ops.utils.VERBOSITY = verbosity
     timeout_timer = timeout_timer or TimeoutTimer(6e5)
 
     build_platform = build_platform or {}
