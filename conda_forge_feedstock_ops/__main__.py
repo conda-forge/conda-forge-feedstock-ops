@@ -344,7 +344,6 @@ def _lint():
 def _check_solvable(
     *,
     timeout,
-    verbosity,
     additional_channels,
     build_platform,
     solver,
