@@ -619,7 +619,8 @@ python_impl:
 
 @pytest.mark.skipif(
     VersionOrder(get_rattler_build_version()) > VersionOrder("0.57.2"),
-    reason="`rattler-build >= 0.57.2` causes opaque error. See TODO PUT URL HERE.",
+    reason="`rattler-build >= 0.57.2` causes opaque error. "
+    "See https://github.com/conda-forge/conda-forge-feedstock-ops/issues/78.",
 )
 def test_jolt_physics_rattler(tmp_path):
     """test the new recipe format"""
