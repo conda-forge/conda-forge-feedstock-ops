@@ -123,6 +123,8 @@ def virtual_package_repodata():
     import shutil
 
     # tmp directory in github actions
+    for k, v in os.environ.items():
+        print(k, v, flush=True)
     if "RUNNER_TEMP" in os.environ:
         tmp_dir = os.path.join(os.environ.get("RUNNER_TEMP"), "virtual_packages_" + str(int(abs(hash("42")))))
         os.makedirs(tmp_dir, exist_ok=True)
