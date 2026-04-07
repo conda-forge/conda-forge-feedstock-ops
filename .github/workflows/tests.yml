@@ -67,6 +67,5 @@ jobs:
 
       - name: run tests
         run: |
-          env
           export RUST_BACKTRACE=full
           pytest -vvs tests -k test_jolt_physics_rattler
