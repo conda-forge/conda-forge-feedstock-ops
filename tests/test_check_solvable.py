@@ -678,9 +678,12 @@ def test_hpp_fcl_solvable_runs_containers(solver, use_containers):
     )
 
 
+@pytest.mark.parametrize("level", [logging.INFO, logging.DEBUG], ids=["info", "debug"])
 @skipif_no_containers
-def test_check_solvable_runs_containers_logging(solver, use_containers, caplog):
-    with caplog.at_level(logging.DEBUG):
+def test_check_solvable_runs_containers_logging(
+    solver, use_containers, caplog, capsys, level
+):
+    with caplog.at_level(level):
         feedstock_dir = os.path.join(DATA_DIR, "hpp-fcl-feedstock")
         is_recipe_solvable(
             feedstock_dir,
@@ -694,11 +697,45 @@ def test_check_solvable_runs_containers_logging(solver, use_containers, caplog):
         )
 
     found_it = False
-    for record in caplog.records:
-        if (
-            record.levelname == "DEBUG"
-            and record.message == "rendering recipe with conda build"
-        ):
+    for line in capsys.readouterr().out.splitlines():
+        if line.startswith("DEBUG") and "rendering recipe with conda build" in line:
             found_it = True
 
-    assert found_it, "DEBUG log message 'rendering recipe with conda build' not found!"
+    if level == logging.DEBUG:
+        assert found_it, (
+            "DEBUG log message 'rendering recipe with conda build' not found!"
+        )
+    else:
+        assert not found_it, (
+            "DEBUG log message 'rendering recipe with conda build' found!"
+        )
+
+
+@pytest.mark.parametrize("level", [logging.INFO, logging.DEBUG], ids=["info", "debug"])
+def test_check_solvable_runs_local_logging(solver, capsys, caplog, level):
+    with caplog.at_level(level):
+        feedstock_dir = os.path.join(DATA_DIR, "hpp-fcl-feedstock")
+        is_recipe_solvable(
+            feedstock_dir,
+            solver=solver,
+            build_platform=dict(
+                linux_aarch64="linux_64",
+                linux_ppc64le="linux_64",
+                osx_arm64="osx_64",
+            ),
+            use_container=False,
+        )
+
+    found_it = False
+    for line in capsys.readouterr().out.splitlines():
+        if line.startswith("DEBUG") and "rendering recipe with conda build" in line:
+            found_it = True
+
+    if level == logging.DEBUG:
+        assert found_it, (
+            "DEBUG log message 'rendering recipe with conda build' not found!"
+        )
+    else:
+        assert not found_it, (
+            "DEBUG log message 'rendering recipe with conda build' found!"
+        )
