@@ -697,7 +697,7 @@ def test_check_solvable_runs_containers_logging(
         )
 
     found_it = False
-    for line in capsys.readouterr().out.splitlines():
+    for line in capsys.readouterr().err.splitlines():
         with capsys.disabled():
             print("got line:", line, flush=True)
         if line.startswith("DEBUG") and "rendering recipe with conda build" in line:
@@ -729,7 +729,9 @@ def test_check_solvable_runs_local_logging(solver, capsys, caplog, level):
         )
 
     found_it = False
-    for line in capsys.readouterr().out.splitlines():
+    for line in capsys.readouterr().err.splitlines():
+        with capsys.disabled():
+            print("got line:", line, flush=True)
         if line.startswith("DEBUG") and "rendering recipe with conda build" in line:
             found_it = True
 

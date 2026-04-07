@@ -4,6 +4,7 @@ import functools
 import io
 import os
 import subprocess
+import sys
 import tempfile
 import time
 import traceback
@@ -121,6 +122,7 @@ def print_verb(fmt, *args, verbosity=0, stack_bump=1):
             + ":"
             + msg,
             flush=True,
+            file=sys.stderr,
         )
 
 
