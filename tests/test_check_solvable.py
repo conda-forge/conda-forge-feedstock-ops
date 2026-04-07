@@ -1,3 +1,4 @@
+import io
 import logging
 import os
 import pathlib
@@ -7,6 +8,7 @@ import tempfile
 from textwrap import dedent
 
 import pytest
+import wurlitzer
 from conda.models.version import VersionOrder
 from conftest import DATA_DIR, get_rattler_build_version, skipif_no_containers
 from flaky import flaky
@@ -683,7 +685,11 @@ def test_hpp_fcl_solvable_runs_containers(solver, use_containers):
 def test_check_solvable_runs_containers_logging(
     solver, use_containers, caplog, capsys, level
 ):
-    with caplog.at_level(level):
+    outerr = io.StringIO()
+    with (
+        caplog.at_level(level),
+        wurlitzer.pipes(stdout=outerr, stderr=wurlitzer.STDOUT),
+    ):
         feedstock_dir = os.path.join(DATA_DIR, "hpp-fcl-feedstock")
         is_recipe_solvable(
             feedstock_dir,
@@ -697,7 +703,12 @@ def test_check_solvable_runs_containers_logging(
         )
 
     found_it = False
-    for line in capsys.readouterr().err.splitlines():
+    all_lines = (
+        list(capsys.readouterr().err.splitlines())
+        + list(capsys.readouterr().err.splitlines())
+        + list(outerr.getvalue().splitlines())
+    )
+    for line in all_lines:
         with capsys.disabled():
             print("got line:", line, flush=True)
         if line.startswith("DEBUG") and "rendering recipe with conda build" in line:
