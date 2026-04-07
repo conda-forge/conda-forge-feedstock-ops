@@ -122,7 +122,11 @@ def virtual_package_repodata():
     # TODO: we might not want to use TemporaryDirectory
     import shutil
 
-    # # tmp directory in github actions
+    # tmp directory in github actions
+    if "RUNNER_TEMP" in os.environ:
+        tmp_dir = os.path.join(os.environ.get("RUNNER_TEMP"), "virtual_packages_" + int(abs(hash("42"))))
+    else:
+        tmp_dir = tempfile.mkdtemp()
     # runner_tmp = os.environ.get("RUNNER_TEMP")
     # tmp_dir = tempfile.mkdtemp(dir=runner_tmp)
     # if not runner_tmp:
