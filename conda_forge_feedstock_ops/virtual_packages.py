@@ -124,7 +124,7 @@ def virtual_package_repodata():
 
     # tmp directory in github actions
     if "RUNNER_TEMP" in os.environ:
-        tmp_dir = os.path.join(os.environ.get("RUNNER_TEMP"), "virtual_packages_" + int(abs(hash("42"))))
+        tmp_dir = os.path.join(os.environ.get("RUNNER_TEMP"), "virtual_packages_" + str(int(abs(hash("42")))))
         os.makedirs(tmp_dir, exist_ok=True)
     else:
         tmp_dir = tempfile.mkdtemp()
