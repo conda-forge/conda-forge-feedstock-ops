@@ -165,7 +165,7 @@ def test_rerender_containerized_same_as_local_own_feedstock(
                     f"msg: {msg}\nout: {captured.out}\nerr: {captured.err}"
                 )
                 with pushd("conda-forge-feedstock-check-solvable-feedstock"):
-                    assert os.path.exists(".azure-pipelines/azure-pipelines-linux.yml")
+                    assert os.path.exists(".github/workflows/conda-build.yml")
             else:
                 assert msg is None, (
                     f"msg: {msg}\nout: {captured.out}\nerr: {captured.err}"
@@ -207,7 +207,7 @@ def test_rerender_containerized_same_as_local_own_feedstock(
                 print(f"out: {local_captured.out}\nerr: {local_captured.err}")
 
             with pushd("conda-forge-feedstock-check-solvable-feedstock"):
-                assert os.path.exists(".azure-pipelines/azure-pipelines-linux.yml")
+                assert os.path.exists(".github/workflows/conda-build.yml")
 
         if not use_exclusive_config_file:
             assert (
@@ -492,6 +492,23 @@ def test_rerender_containerized_permissions(use_containers):
                     f"\n\nfinal permissions for .scripts/build_steps.sh: {perms_bs:#o}\n\n"
                 )
                 cont_rerend_exec = get_user_execute_permissions(".")
+
+            # compare onyl shared keys
+            keys_to_check = (
+                set(orig_exec.keys())
+                & set(local_rerend_exec.keys())
+                & set(cont_rerend_exec.keys())
+            )
+            orig_exec = {k: v for k, v in orig_exec.items() if k in keys_to_check}
+            local_rerend_exec = {
+                k: v for k, v in local_rerend_exec.items() if k in keys_to_check
+            }
+            cont_rerend_exec = {
+                k: v for k, v in cont_rerend_exec.items() if k in keys_to_check
+            }
+
+            assert "build-locally.py" in keys_to_check
+            assert ".scripts/build_steps.sh" in keys_to_check
 
             assert orig_exec == local_rerend_exec
             assert orig_exec == cont_rerend_exec

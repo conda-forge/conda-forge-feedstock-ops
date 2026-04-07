@@ -4,6 +4,7 @@ import functools
 import io
 import os
 import subprocess
+import sys
 import tempfile
 import time
 import traceback
@@ -94,7 +95,6 @@ PROBLEMATIC_REQS = {
 # I cannot get python logging to work correctly with all of the hacks to
 # make conda-build be quiet.
 # so this is a thing
-VERBOSITY = FeedstockOpsSettings().verbosity
 VERBOSITY_PREFIX = {
     0: "CRITICAL",
     1: "WARNING",
@@ -108,7 +108,7 @@ def print_verb(fmt, *args, verbosity=0, stack_bump=1):
 
     frameinfo = stack()[stack_bump]
 
-    if verbosity <= VERBOSITY:
+    if verbosity <= FeedstockOpsSettings().verbosity:
         if args:
             msg = fmt % args
         else:
@@ -122,6 +122,7 @@ def print_verb(fmt, *args, verbosity=0, stack_bump=1):
             + ":"
             + msg,
             flush=True,
+            file=sys.stderr,
         )
 
 
