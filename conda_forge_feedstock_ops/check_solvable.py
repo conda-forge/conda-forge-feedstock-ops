@@ -370,27 +370,27 @@ def _is_recipe_solvable_on_platform(
     # it would be used in a real build
     print_debug("rendering recipe with conda build")
 
-    # with suppress_output():
-    for att in range(2):
-        timeout_timer.raise_for_timeout()
-        try:
-            if att == 1:
-                os.system(f"rm -f {recipe_dir}/conda_build_config.yaml")
-            config = conda_build.config.get_or_merge_config(
-                None,
-                platform=platform,
-                arch=arch,
-                variant_config_files=[cbc_path],
-            )
-            cbc, _ = conda_build.variants.get_package_combined_spec(
-                recipe_dir,
-                config=config,
-            )
-        except Exception as e:
-            if att == 0:
-                pass
-            else:
-                raise e
+    with suppress_output():
+        for att in range(2):
+            timeout_timer.raise_for_timeout()
+            try:
+                if att == 1:
+                    os.system(f"rm -f {recipe_dir}/conda_build_config.yaml")
+                config = conda_build.config.get_or_merge_config(
+                    None,
+                    platform=platform,
+                    arch=arch,
+                    variant_config_files=[cbc_path],
+                )
+                cbc, _ = conda_build.variants.get_package_combined_spec(
+                    recipe_dir,
+                    config=config,
+                )
+            except Exception as e:
+                if att == 0:
+                    pass
+                else:
+                    raise e
 
         timeout_timer.raise_for_timeout()
 
