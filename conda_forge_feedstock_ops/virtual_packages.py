@@ -122,16 +122,16 @@ def virtual_package_repodata():
     # TODO: we might not want to use TemporaryDirectory
     import shutil
 
-    # tmp directory in github actions
-    runner_tmp = os.environ.get("RUNNER_TEMP")
-    tmp_dir = tempfile.mkdtemp(dir=runner_tmp)
+    # # tmp directory in github actions
+    # runner_tmp = os.environ.get("RUNNER_TEMP")
+    # tmp_dir = tempfile.mkdtemp(dir=runner_tmp)
+    # if not runner_tmp:
+    # no need to bother cleaning up on CI
 
-    if not runner_tmp:
-        # no need to bother cleaning up on CI
-        def clean():
-            shutil.rmtree(tmp_dir, ignore_errors=True)
-
-        atexit.register(clean)
+    tmp_dir = tempfile.mkdtemp()
+    def clean():
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+    atexit.register(clean)
 
     tmp_path = pathlib.Path(tmp_dir)
     repodata = FakeRepoData(tmp_path)

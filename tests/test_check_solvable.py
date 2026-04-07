@@ -617,11 +617,11 @@ python_impl:
     assert any("python3.10" in k for k in solvable_by_variant)
 
 
-@pytest.mark.skipif(
-    VersionOrder(get_rattler_build_version()) > VersionOrder("0.57.2"),
-    reason="`rattler-build>0.57.2` causes opaque error. "
-    "See https://github.com/conda-forge/conda-forge-feedstock-ops/issues/78.",
-)
+# @pytest.mark.skipif(
+#     VersionOrder(get_rattler_build_version()) > VersionOrder("0.57.2"),
+#     reason="`rattler-build>0.57.2` causes opaque error. "
+#     "See https://github.com/conda-forge/conda-forge-feedstock-ops/issues/78.",
+# )
 def test_jolt_physics_rattler(tmp_path):
     """test the new recipe format"""
     feedstock_dir = clone_and_checkout_repo(
