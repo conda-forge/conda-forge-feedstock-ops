@@ -50,16 +50,16 @@ jobs:
 
           python -m pip install -v --no-deps --no-build-isolation -e .
 
-      - name: set up docker buildx
-        uses: docker/setup-buildx-action@v3
+      # - name: set up docker buildx
+      #   uses: docker/setup-buildx-action@v3
 
-      - name: build docker image
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
-        with:
-          context: .
-          push: false
-          load: true
-          tags: conda-forge-feedstock-ops:test
+      # - name: build docker image
+      #   uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+      #   with:
+      #     context: .
+      #     push: false
+      #     load: true
+      #     tags: conda-forge-feedstock-ops:test
 
       - name: ensure cli runs
         run: |
@@ -67,5 +67,5 @@ jobs:
 
       - name: run tests
         run: |
-          export RUST_BACKTRACE
+          export RUST_BACKTRACE=full
           pytest -vvs tests -k test_jolt_physics_rattler
