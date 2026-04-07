@@ -698,6 +698,8 @@ def test_check_solvable_runs_containers_logging(
 
     found_it = False
     for line in capsys.readouterr().out.splitlines():
+        with capsys.disabled():
+            print("got line:", line, flush=True)
         if line.startswith("DEBUG") and "rendering recipe with conda build" in line:
             found_it = True
 
