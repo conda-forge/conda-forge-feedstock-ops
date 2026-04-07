@@ -68,4 +68,4 @@ jobs:
       - name: run tests
         run: |
           export RUST_BACKTRACE=full
-          pytest -vvs tests -k test_jolt_physics_rattler
+          pytest -vvs tests -k test_hpp_fcl_solvable_runs_containers --log-cli-level=debug
