@@ -1,3 +1,5 @@
+import io
+import logging
 import os
 import pathlib
 import pprint
@@ -6,7 +8,9 @@ import tempfile
 from textwrap import dedent
 
 import pytest
-from conftest import DATA_DIR, skipif_no_containers
+import wurlitzer
+from conda.models.version import VersionOrder
+from conftest import DATA_DIR, get_rattler_build_version, skipif_no_containers
 from flaky import flaky
 
 from conda_forge_feedstock_ops.check_solvable import is_recipe_solvable
@@ -15,8 +19,6 @@ from conda_forge_feedstock_ops.virtual_packages import (
     FakePackage,
     FakeRepoData,
 )
-
-VERB = 1
 
 
 def clone_and_checkout_repo(base_path: pathlib.Path, origin_url: str, ref: str):
@@ -74,7 +76,6 @@ extra:
     assert is_recipe_solvable(
         feedstock_dir,
         solver=solver,
-        verbosity=VERB,
         timeout=None,
         fail_fast=True,
         use_container=False,
@@ -129,7 +130,6 @@ extra:
     solvable, errors, solvable_by_variant = is_recipe_solvable(
         feedstock_dir,
         solver=solver,
-        verbosity=VERB,
         timeout=None,
         use_container=False,
     )
@@ -146,7 +146,8 @@ extra:
 def test_r_base_cross_solvable(solver):
     feedstock_dir = os.path.join(DATA_DIR, "r-base-feedstock")
     solvable, errors, _ = is_recipe_solvable(
-        feedstock_dir, solver=solver, verbosity=VERB
+        feedstock_dir,
+        solver=solver,
     )
     assert solvable, pprint.pformat(errors)
 
@@ -154,7 +155,6 @@ def test_r_base_cross_solvable(solver):
         feedstock_dir,
         build_platform={"osx_arm64": "osx_64"},
         solver=solver,
-        verbosity=VERB,
         timeout=None,
         fail_fast=True,
         use_container=False,
@@ -173,7 +173,6 @@ def test_xgboost_solvable(tmp_path, solver):
     solvable, errors, _ = is_recipe_solvable(
         feedstock_dir,
         solver=solver,
-        verbosity=VERB,
         timeout=None,
         fail_fast=True,
         use_container=False,
@@ -187,7 +186,6 @@ def test_pandas_solvable(solver):
     solvable, errors, _ = is_recipe_solvable(
         feedstock_dir,
         solver=solver,
-        verbosity=VERB,
         timeout=None,
         fail_fast=True,
         use_container=False,
@@ -201,7 +199,6 @@ def test_hpp_fcl_solvable_runs(solver):
     is_recipe_solvable(
         feedstock_dir,
         solver=solver,
-        verbosity=VERB,
         build_platform=dict(
             linux_aarch64="linux_64",
             linux_ppc64le="linux_64",
@@ -217,7 +214,6 @@ def test_biopython_solvable_runs(solver):
     is_recipe_solvable(
         feedstock_dir,
         solver=solver,
-        verbosity=VERB,
         use_container=False,
     )
 
@@ -229,7 +225,6 @@ def test_guiqwt_solvable(tmp_path, solver):
     solvable, errors, solvable_by_variant = is_recipe_solvable(
         feedstock_dir,
         solver=solver,
-        verbosity=VERB,
         timeout=None,
         fail_fast=True,
         use_container=False,
@@ -248,7 +243,6 @@ def test_arrow_solvable(tmp_path, solver):
     solvable, errors, solvable_by_variant = is_recipe_solvable(
         feedstock_dir,
         solver=solver,
-        verbosity=VERB,
         timeout=None,
         fail_fast=True,
         use_container=False,
@@ -268,7 +262,6 @@ def test_datalad_solvable(tmp_path, solver):
     solvable, errors, solvable_by_variant = is_recipe_solvable(
         feedstock_dir,
         solver=solver,
-        verbosity=VERB,
         timeout=None,
         fail_fast=True,
         use_container=False,
@@ -288,7 +281,6 @@ def test_grpcio_solvable(tmp_path, solver):
     solvable, errors, solvable_by_variant = is_recipe_solvable(
         feedstock_dir,
         solver=solver,
-        verbosity=VERB,
         timeout=None,
         fail_fast=True,
         use_container=False,
@@ -308,7 +300,6 @@ def test_dftbplus_solvable(tmp_path, solver):
     solvable, errors, solvable_by_variant = is_recipe_solvable(
         feedstock_dir,
         solver=solver,
-        verbosity=VERB,
         timeout=None,
         fail_fast=True,
         use_container=False,
@@ -333,7 +324,6 @@ def test_cupy_solvable_at_commit(tmp_path, solver):
     solvable, errors, solvable_by_variant = is_recipe_solvable(
         feedstock_dir,
         solver=solver,
-        verbosity=VERB,
         timeout=None,
         fail_fast=True,
         use_container=False,
@@ -351,7 +341,6 @@ def test_cupy_solvable(tmp_path, solver):
     solvable, errors, solvable_by_variant = is_recipe_solvable(
         feedstock_dir,
         solver=solver,
-        verbosity=VERB,
         timeout=None,
         fail_fast=True,
         use_container=False,
@@ -409,7 +398,6 @@ def test_run_exports_constrains_conflict(feedstock_dir, tmp_path_factory, solver
         feedstock_dir,
         additional_channels=[repodata.channel_url],
         solver=solver,
-        verbosity=VERB,
         timeout=None,
         fail_fast=True,
         use_container=False,
@@ -456,7 +444,6 @@ def test_run_exports_constrains_notok(feedstock_dir, tmp_path_factory, solver):
     solvable, errors, solvable_by_variant = is_recipe_solvable(
         feedstock_dir,
         solver=solver,
-        verbosity=VERB,
         timeout=None,
         use_container=False,
     )
@@ -511,7 +498,6 @@ extra:
     assert not is_recipe_solvable(
         feedstock_dir,
         solver=solver,
-        verbosity=VERB,
         timeout=None,
         use_container=False,
     )[0]
@@ -530,7 +516,6 @@ def test_arrow_solvable_timeout(tmp_path, solver):
             feedstock_dir,
             timeout=0.1,
             solver=solver,
-            verbosity=VERB,
             fail_fast=True,
             use_container=False,
         )
@@ -606,7 +591,6 @@ python_impl:
     solvable, errors, solvable_by_variant = is_recipe_solvable(
         feedstock_dir,
         solver=solver,
-        verbosity=VERB,
         timeout=None,
         fail_fast=True,
         use_container=False,
@@ -616,6 +600,11 @@ python_impl:
     assert any("python3.10" in k for k in solvable_by_variant)
 
 
+@pytest.mark.skipif(
+    VersionOrder(get_rattler_build_version()) > VersionOrder("0.57.2"),
+    reason="`rattler-build>0.57.2` causes opaque error. "
+    "See https://github.com/conda-forge/conda-forge-feedstock-ops/issues/78.",
+)
 def test_jolt_physics_rattler(tmp_path):
     """test the new recipe format"""
     feedstock_dir = clone_and_checkout_repo(
@@ -626,7 +615,6 @@ def test_jolt_physics_rattler(tmp_path):
     solvable, errors, solvable_by_variant = is_recipe_solvable(
         feedstock_dir,
         solver="rattler",
-        verbosity=VERB,
         timeout=None,
         fail_fast=True,
         use_container=False,
@@ -641,7 +629,6 @@ def test_v1_unsolvable(tmp_path):
     solvable, errors, _ = is_recipe_solvable(
         feedstock_dir,
         solver="rattler",
-        verbosity=VERB,
         timeout=None,
         fail_fast=True,
         use_container=False,
@@ -684,7 +671,6 @@ def test_hpp_fcl_solvable_runs_containers(solver, use_containers):
     is_recipe_solvable(
         feedstock_dir,
         solver=solver,
-        verbosity=VERB,
         build_platform=dict(
             linux_aarch64="linux_64",
             linux_ppc64le="linux_64",
@@ -692,3 +678,89 @@ def test_hpp_fcl_solvable_runs_containers(solver, use_containers):
         ),
         use_container=True,
     )
+
+
+@pytest.mark.parametrize("level", [logging.INFO, logging.DEBUG], ids=["info", "debug"])
+@skipif_no_containers
+def test_check_solvable_runs_containers_logging(
+    solver, use_containers, caplog, capsys, level
+):
+    outerr = io.StringIO()
+    with (
+        caplog.at_level(level),
+        wurlitzer.pipes(stdout=outerr, stderr=wurlitzer.STDOUT),
+    ):
+        feedstock_dir = os.path.join(DATA_DIR, "hpp-fcl-feedstock")
+        is_recipe_solvable(
+            feedstock_dir,
+            solver=solver,
+            build_platform=dict(
+                linux_aarch64="linux_64",
+                linux_ppc64le="linux_64",
+                osx_arm64="osx_64",
+            ),
+            use_container=True,
+        )
+
+    any_debug = False
+    found_it = False
+    all_lines = (
+        list(capsys.readouterr().err.splitlines())
+        + list(capsys.readouterr().err.splitlines())
+        + list(outerr.getvalue().splitlines())
+    )
+    for line in all_lines:
+        with capsys.disabled():
+            print("got line:", line, flush=True)
+        if line.startswith("DEBUG") and "rendering recipe with conda build" in line:
+            found_it = True
+        if line.startswith("DEBUG"):
+            any_debug = True
+
+    if level == logging.DEBUG:
+        assert found_it, (
+            "DEBUG log message 'rendering recipe with conda build' not found!"
+        )
+        assert any_debug, "Did not find any lines that start with 'DEBUG'!"
+    else:
+        assert not found_it, (
+            "DEBUG log message 'rendering recipe with conda build' found!"
+        )
+        assert not any_debug, "Found lines that start with 'DEBUG'!"
+
+
+@pytest.mark.parametrize("level", [logging.INFO, logging.DEBUG], ids=["info", "debug"])
+def test_check_solvable_runs_local_logging(solver, capsys, caplog, level):
+    with caplog.at_level(level):
+        feedstock_dir = os.path.join(DATA_DIR, "hpp-fcl-feedstock")
+        is_recipe_solvable(
+            feedstock_dir,
+            solver=solver,
+            build_platform=dict(
+                linux_aarch64="linux_64",
+                linux_ppc64le="linux_64",
+                osx_arm64="osx_64",
+            ),
+            use_container=False,
+        )
+
+    any_debug = False
+    found_it = False
+    for line in capsys.readouterr().err.splitlines():
+        with capsys.disabled():
+            print("got line:", line, flush=True)
+        if line.startswith("DEBUG") and "rendering recipe with conda build" in line:
+            found_it = True
+        if line.startswith("DEBUG"):
+            any_debug = True
+
+    if level == logging.DEBUG:
+        assert found_it, (
+            "DEBUG log message 'rendering recipe with conda build' not found!"
+        )
+        assert any_debug, "Did not find any lines that start with 'DEBUG'!"
+    else:
+        assert not found_it, (
+            "DEBUG log message 'rendering recipe with conda build' found!"
+        )
+        assert not any_debug, "Found lines that start with 'DEBUG'!"

@@ -1,4 +1,5 @@
 import glob
+import io
 import logging
 import os
 import pprint
@@ -11,7 +12,6 @@ import orjson
 import psutil
 from ruamel.yaml import YAML
 
-import conda_forge_feedstock_ops.utils
 from conda_forge_feedstock_ops.container_utils import (
     get_default_log_level_args,
     run_container_operation,
@@ -45,7 +45,6 @@ def is_recipe_solvable(
     feedstock_dir,
     additional_channels=None,
     timeout=600,
-    verbosity=None,
     build_platform=None,
     solver="rattler",
     fail_fast=False,
@@ -68,9 +67,6 @@ def is_recipe_solvable(
         If not None, then the work will be run in a separate process and
         this function will return True if the work doesn't complete before `timeout`
         seconds.
-    verbosity : int
-        An int indicating the level of verbosity from 0 (no output) to 3
-        (gobbs of output).
     build_platform : dict, optional
         The `build_platform` section of the `conda-forge.yml` file.`
     solver : str
@@ -94,21 +90,20 @@ def is_recipe_solvable(
     solvable_by_variant : dict
         A lookup by variant config that shows if a particular config is solvable
     """
-    if verbosity is None:
-        _log2verb = {
-            "CRITICAL": 0,
-            "WARNING": 1,
-            "INFO": 2,
-            "DEBUG": 3,
-        }
-        verbosity = _log2verb.get(
-            str(logging.getLevelName(logger.getEffectiveLevel())).upper()
-        )
-        logger.debug(
-            "is_recipe_solver log-level=%s -> verbosity=%d",
-            logging.getLevelName(logger.getEffectiveLevel()),
-            verbosity,
-        )
+    _log2verb = {
+        "CRITICAL": 0,
+        "WARNING": 1,
+        "INFO": 2,
+        "DEBUG": 3,
+    }
+    verbosity = _log2verb.get(
+        str(logging.getLevelName(logger.getEffectiveLevel())).upper()
+    )
+    logger.debug(
+        "is_recipe_solvable log-level=%s -> verbosity=%d",
+        logging.getLevelName(logger.getEffectiveLevel()),
+        verbosity,
+    )
 
     if should_use_container(use_container=use_container):
         return _is_recipe_solvable_containerized(
@@ -116,7 +111,6 @@ def is_recipe_solvable(
             additional_channels=additional_channels,
             timeout=timeout,
             build_platform=build_platform,
-            verbosity=verbosity,
             solver=solver,
             fail_fast=fail_fast,
         )
@@ -137,7 +131,6 @@ def _is_recipe_solvable_containerized(
     additional_channels=None,
     timeout=600,
     build_platform=None,
-    verbosity=1,
     solver="rattler",
     fail_fast=False,
 ):
@@ -152,8 +145,6 @@ def _is_recipe_solvable_containerized(
         "check-solvable",
         "--timeout",
         str(timeout),
-        "--verbosity",
-        str(verbosity),
         "--solver",
         str(solver),
     ]
@@ -202,7 +193,7 @@ def _is_recipe_solvable_local(
     additional_channels=None,
     timeout=600,
     build_platform=None,
-    verbosity=1,
+    verbosity=None,
     solver="rattler",
     fail_fast=False,
 ) -> tuple[bool, list[str], dict[str, bool]]:
@@ -210,16 +201,23 @@ def _is_recipe_solvable_local(
 
     See the docstring of `is_recipe_solvable` for inputs and outputs.
     """
-    try:
-        res = _is_recipe_solvable(
+
+    def _run():
+        return _is_recipe_solvable(
             feedstock_dir,
             additional_channels=additional_channels,
             build_platform=build_platform,
-            verbosity=verbosity,
             solver=solver,
             timeout_timer=TimeoutTimer(timeout if timeout is not None else 6e5),
             fail_fast=fail_fast,
         )
+
+    try:
+        if verbosity is not None:
+            with override_env("CF_FEEDSTOCK_OPS_VERBOSITY", str(verbosity)):
+                res = _run()
+        else:
+            res = _run()
     except TimeoutTimerException:
         print_warning("SOLVER TIMEOUT for %s", feedstock_dir)
         res = (
@@ -235,12 +233,10 @@ def _is_recipe_solvable(
     feedstock_dir,
     additional_channels=(),
     build_platform=None,
-    verbosity=1,
     solver="rattler",
     timeout_timer=None,
     fail_fast=False,
 ) -> tuple[bool, list[str], dict[str, bool]]:
-    conda_forge_feedstock_ops.utils.VERBOSITY = verbosity
     timeout_timer = timeout_timer or TimeoutTimer(6e5)
 
     build_platform = build_platform or {}
@@ -393,6 +389,10 @@ def _is_recipe_solvable_on_platform(
                     raise e
 
         timeout_timer.raise_for_timeout()
+
+        cbc_io = io.StringIO()
+        parser.dump(cbc, cbc_io)
+        print_debug("rendered variants:\n" + cbc_io.getvalue())
 
         if os.path.exists(os.path.join(recipe_dir, "recipe.yaml")):
             # this is a rattler-build recipe so we can invoke rattler-build with
