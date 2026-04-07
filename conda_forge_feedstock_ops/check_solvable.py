@@ -395,11 +395,10 @@ def _is_recipe_solvable_on_platform(
 
         timeout_timer.raise_for_timeout()
 
-    cbc_io = io.StringIO()
-    parser.dump(cbc, cbc_io)
-    print_debug("rendered variants:\n" + cbc_io.getvalue())
+        cbc_io = io.StringIO()
+        parser.dump(cbc, cbc_io)
+        print_debug("rendered variants:\n" + cbc_io.getvalue())
 
-    with suppress_output():
         if os.path.exists(os.path.join(recipe_dir, "recipe.yaml")):
             # this is a rattler-build recipe so we can invoke rattler-build with
             # the new `cbc`.

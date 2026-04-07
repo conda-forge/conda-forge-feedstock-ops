@@ -143,7 +143,7 @@ def print_debug(fmt, *args):
 
 @contextlib.contextmanager
 def suppress_output():
-    if FeedstockOpsSettings().verbosity > 2:
+    if VERBOSITY > 2:
         suppress = False
     else:
         suppress = True
