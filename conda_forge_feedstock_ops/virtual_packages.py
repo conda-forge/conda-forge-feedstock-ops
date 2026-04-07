@@ -123,19 +123,15 @@ def virtual_package_repodata():
     import shutil
 
     # tmp directory in github actions
-    if "RUNNER_TEMP" in os.environ:
-        tmp_dir = os.path.join(os.environ.get("RUNNER_TEMP"), "virtual_packages_" + str(int(abs(hash("42")))))
-        os.makedirs(tmp_dir, exist_ok=True)
-    else:
-        tmp_dir = tempfile.mkdtemp()
-    # runner_tmp = os.environ.get("RUNNER_TEMP")
-    # tmp_dir = tempfile.mkdtemp(dir=runner_tmp)
-    # if not runner_tmp:
-    # no need to bother cleaning up on CI
+    runner_tmp = os.environ.get("RUNNER_TEMP")
+    tmp_dir = tempfile.mkdtemp(dir=runner_tmp)
 
-    def clean():
-        shutil.rmtree(tmp_dir, ignore_errors=True)
-    atexit.register(clean)
+    if not runner_tmp:
+        # no need to bother cleaning up on CI
+        def clean():
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+
+        atexit.register(clean)
 
     tmp_path = pathlib.Path(tmp_dir)
     repodata = FakeRepoData(tmp_path)
