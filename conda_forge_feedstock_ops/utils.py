@@ -161,8 +161,8 @@ def suppress_output():
         fout = io.StringIO()
         ferr = io.StringIO()
         with contextlib.redirect_stdout(fout), contextlib.redirect_stderr(ferr):
-            with wurlitzer.pipes(stdout=outerr, stderr=wurlitzer.STDOUT):
-                yield None
+            # with wurlitzer.pipes(stdout=outerr, stderr=wurlitzer.STDOUT):
+            yield None
 
     except Exception as e:
         print(f"EXCEPTION: captured C-level I/O: {outerr.getvalue()!r}", flush=True)
