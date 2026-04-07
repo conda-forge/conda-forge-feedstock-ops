@@ -1,3 +1,4 @@
+import logging
 import os
 import pathlib
 import pprint
@@ -143,7 +144,8 @@ extra:
 def test_r_base_cross_solvable(solver):
     feedstock_dir = os.path.join(DATA_DIR, "r-base-feedstock")
     solvable, errors, _ = is_recipe_solvable(
-        feedstock_dir, solver=solver,
+        feedstock_dir,
+        solver=solver,
     )
     assert solvable, pprint.pformat(errors)
 
@@ -596,11 +598,11 @@ python_impl:
     assert any("python3.10" in k for k in solvable_by_variant)
 
 
-# @pytest.mark.skipif(
-#     VersionOrder(get_rattler_build_version()) > VersionOrder("0.57.2"),
-#     reason="`rattler-build>0.57.2` causes opaque error. "
-#     "See https://github.com/conda-forge/conda-forge-feedstock-ops/issues/78.",
-# )
+@pytest.mark.skipif(
+    VersionOrder(get_rattler_build_version()) > VersionOrder("0.57.2"),
+    reason="`rattler-build>0.57.2` causes opaque error. "
+    "See https://github.com/conda-forge/conda-forge-feedstock-ops/issues/78.",
+)
 def test_jolt_physics_rattler(tmp_path):
     """test the new recipe format"""
     feedstock_dir = clone_and_checkout_repo(
@@ -674,3 +676,29 @@ def test_hpp_fcl_solvable_runs_containers(solver, use_containers):
         ),
         use_container=True,
     )
+
+
+@skipif_no_containers
+def test_check_solvable_runs_containers_logging(solver, use_containers, caplog):
+    with caplog.at_level(logging.DEBUG):
+        feedstock_dir = os.path.join(DATA_DIR, "hpp-fcl-feedstock")
+        is_recipe_solvable(
+            feedstock_dir,
+            solver=solver,
+            build_platform=dict(
+                linux_aarch64="linux_64",
+                linux_ppc64le="linux_64",
+                osx_arm64="osx_64",
+            ),
+            use_container=True,
+        )
+
+    found_it = False
+    for record in caplog.records:
+        if (
+            record.levelname == "DEBUG"
+            and record.message == "rendering recipe with conda build"
+        ):
+            found_it = True
+
+    assert found_it, "DEBUG log message 'rendering recipe with conda build' not found!"
