@@ -702,6 +702,7 @@ def test_check_solvable_runs_containers_logging(
             use_container=True,
         )
 
+    any_debug = False
     found_it = False
     all_lines = (
         list(capsys.readouterr().err.splitlines())
@@ -713,15 +714,19 @@ def test_check_solvable_runs_containers_logging(
             print("got line:", line, flush=True)
         if line.startswith("DEBUG") and "rendering recipe with conda build" in line:
             found_it = True
+        if line.startswith("DEBUG"):
+            any_debug = True
 
     if level == logging.DEBUG:
         assert found_it, (
             "DEBUG log message 'rendering recipe with conda build' not found!"
         )
+        assert any_debug, "Did not find any lines that start with 'DEBUG'!"
     else:
         assert not found_it, (
             "DEBUG log message 'rendering recipe with conda build' found!"
         )
+        assert not any_debug, "Found lines that start with 'DEBUG'!"
 
 
 @pytest.mark.parametrize("level", [logging.INFO, logging.DEBUG], ids=["info", "debug"])
@@ -739,18 +744,23 @@ def test_check_solvable_runs_local_logging(solver, capsys, caplog, level):
             use_container=False,
         )
 
+    any_debug = False
     found_it = False
     for line in capsys.readouterr().err.splitlines():
         with capsys.disabled():
             print("got line:", line, flush=True)
         if line.startswith("DEBUG") and "rendering recipe with conda build" in line:
             found_it = True
+        if line.startswith("DEBUG"):
+            any_debug = True
 
     if level == logging.DEBUG:
         assert found_it, (
             "DEBUG log message 'rendering recipe with conda build' not found!"
         )
+        assert any_debug, "Did not find any lines that start with 'DEBUG'!"
     else:
         assert not found_it, (
             "DEBUG log message 'rendering recipe with conda build' found!"
         )
+        assert not any_debug, "Found lines that start with 'DEBUG'!"
