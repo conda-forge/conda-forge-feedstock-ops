@@ -6,7 +6,8 @@ import tempfile
 from textwrap import dedent
 
 import pytest
-from conftest import DATA_DIR, skipif_no_containers
+from conda.models.version import VersionOrder
+from conftest import DATA_DIR, get_rattler_build_version, skipif_no_containers
 from flaky import flaky
 
 from conda_forge_feedstock_ops.check_solvable import is_recipe_solvable
@@ -616,6 +617,10 @@ python_impl:
     assert any("python3.10" in k for k in solvable_by_variant)
 
 
+@pytest.mark.skipif(
+    VersionOrder(get_rattler_build_version()) > VersionOrder("0.57.2"),
+    reason="`rattler-build >= 0.57.2` causes opaque error. See TODO PUT URL HERE.",
+)
 def test_jolt_physics_rattler(tmp_path):
     """test the new recipe format"""
     feedstock_dir = clone_and_checkout_repo(

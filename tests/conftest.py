@@ -150,3 +150,19 @@ def pytest_generate_tests(metafunc):
             else:
                 raise ValueError(f"Unknown solver {solver}")
         metafunc.parametrize("solver_factory", factories)
+
+
+def get_rattler_build_version():
+    pkgs = json.loads(
+        subprocess.run(
+            ["conda", "list", "rattler-build", "--json"],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout
+    )
+    for pkg in pkgs:
+        if pkg["name"] == "rattler-build":
+            return pkg["version"]
+
+    raise RuntimeError("`rattler-build` version not found!")
