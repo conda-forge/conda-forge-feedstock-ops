@@ -68,4 +68,5 @@ jobs:
       - name: run tests
         run: |
           export RUST_BACKTRACE=full
-          pytest -vvs tests -k test_check_solvable_runs_containers_logging --log-cli-level=debug
+          pytest -vvs tests -k test_check_solvable_runs_containers_logging
+          pytest -vvs tests -k test_check_solvable_runs_local_logging
