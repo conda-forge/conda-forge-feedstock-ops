@@ -78,7 +78,7 @@ jobs:
           pushd conda-forge-feedstock-ops-feedstock
           ls -lah .ci_support/README
           git ls-files --stage .ci_support/README
-          conda-smithy rerender
+          conda-smithy rerender --no-check-uptodate
           ls -lah .ci_support/README
           git ls-files --stage .ci_support/README
           popd
