@@ -148,9 +148,7 @@ def test_rerender_containerized_same_as_local_own_feedstock(
 
             try:
                 msg = rerender_containerized(
-                    os.path.join(
-                        tmpdir_cont, "conda-forge-feedstock-ops-feedstock"
-                    ),
+                    os.path.join(tmpdir_cont, "conda-forge-feedstock-ops-feedstock"),
                     **rrnd_kwargs,
                 )
             finally:
@@ -197,9 +195,7 @@ def test_rerender_containerized_same_as_local_own_feedstock(
 
             try:
                 local_msg = rerender_local(
-                    os.path.join(
-                        tmpdir_local, "conda-forge-feedstock-ops-feedstock"
-                    ),
+                    os.path.join(tmpdir_local, "conda-forge-feedstock-ops-feedstock"),
                     **rrnd_kwargs,
                 )
             finally:
@@ -394,9 +390,7 @@ def test_rerender_containerized_empty(use_containers):
                     )
 
             local_msg = rerender_local(
-                os.path.join(
-                    tmpdir_local, "conda-forge-feedstock-ops-feedstock"
-                ),
+                os.path.join(tmpdir_local, "conda-forge-feedstock-ops-feedstock"),
             )
 
             assert local_msg is not None
@@ -408,9 +402,7 @@ def test_rerender_containerized_empty(use_containers):
 
         # now run in container and make sure commit message is None
         msg = rerender_containerized(
-            os.path.join(
-                tmpdir_local, "conda-forge-feedstock-ops-feedstock"
-            ),
+            os.path.join(tmpdir_local, "conda-forge-feedstock-ops-feedstock"),
         )
 
         assert msg is None
