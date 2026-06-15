@@ -68,6 +68,7 @@ jobs:
       - name: run tests
         run: |
           conda uninstall conda-smithy --force --yes
+          # fails with package from anaconda.org
           git clone https://github.com/conda-forge/conda-smithy.git
           pushd conda-smithy
           # git checkout a393ff525c42701f401bd516f06cffd7343399ae  # 2026.5.29 OK!
@@ -89,11 +90,12 @@ jobs:
 
           echo "perms: '${val}'"
           if [[ "${val}" != "100644" ]]; then
-            echo "bash fail?"
+            echo "bash fail"
             exit 1
           else
+            echo "bash OK"
             exit 0
           fi
 
-          # export RUST_BACKTRACE=full
-          # pytest -vvs tests --log-cli-level=debug -k test_rerender_containerized_permissions
+        # export RUST_BACKTRACE=full
+        # pytest -vvs tests --log-cli-level=debug -k test_rerender_containerized_permissions
