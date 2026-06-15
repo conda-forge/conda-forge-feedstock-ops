@@ -68,4 +68,12 @@ jobs:
       - name: run tests
         run: |
           export RUST_BACKTRACE=full
+          git clone https://github.com/conda-forge/conda-forge-feedstock-ops-feedstock.git
+          pushd conda-forge-feedstock-ops-feedstock
+          ls -lah .ci_support/README
+          git ls-files --stage .ci_support/README
+          conda-smithy rerender
+          ls -lah .ci_support/README
+          git ls-files --stage .ci_support/README
+
           pytest -vvs tests --log-cli-level=debug -k test_rerender_containerized_permissions
