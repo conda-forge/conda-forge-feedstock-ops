@@ -274,6 +274,7 @@ def rerender_local(feedstock_dir, exclusive_config_file=None, timeout=None):
         pushd(feedstock_dir),
         tempfile.TemporaryDirectory() as tmpdir,
     ):
+        os.system(f"ls -lah {tmpdir}")
         ret = _subprocess_run_tee(
             [
                 "conda-smithy",
