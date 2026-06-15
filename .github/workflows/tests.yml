@@ -71,7 +71,8 @@ jobs:
           git clone https://github.com/conda-forge/conda-smithy.git
           pushd conda-smithy
           # git checkout a393ff525c42701f401bd516f06cffd7343399ae  # 2026.5.29 OK!
-          git checkout 5cb17421332e502c934c4cafddc288188604a794  # pr 2567
+          # git checkout 5cb17421332e502c934c4cafddc288188604a794  # pr 2567 OK!
+          git checkout c771d9b52815e29bf5f52bebf502c085b3d62147  # 2026.6.14
           pip install --no-deps --no-build-isolation .
           popd
 
@@ -85,7 +86,7 @@ jobs:
           val=$(git ls-files --stage .ci_support/README | awk '{print $1}')
           popd
 
-          if [[ "${val}" != "100644" ]];
+          if [[ "${val}" != "100644" ]]; then
             exit 1
           else
             exit 0
