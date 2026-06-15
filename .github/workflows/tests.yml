@@ -68,6 +68,7 @@ jobs:
       - name: run tests
         # fails with package from anaconda.org so try a local install
         run: |
+          conda install setuptools=82 --yes
           conda uninstall conda-smithy --force --yes
           git clone https://github.com/conda-forge/conda-smithy.git
           pushd conda-smithy
