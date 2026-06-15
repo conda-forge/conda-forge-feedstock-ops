@@ -29,46 +29,46 @@ jobs:
           environment-file: environment.yml
           micromamba-version: "1.5.10-0"
 
-      # - name: configure conda and install code
-      #   run: |
-      #     pip install --no-deps --no-build-isolation -e .
+      - name: configure conda and install code
+        run: |
+          pip install --no-deps --no-build-isolation -e .
 
-      # - name: test versions
-      #   run: |
-      #     cd ..
-      #     python -c "import conda_forge_feedstock_ops; assert conda_forge_feedstock_ops.__version__ != '0.0.0'"
-      #     cd -
+      - name: test versions
+        run: |
+          cd ..
+          python -c "import conda_forge_feedstock_ops; assert conda_forge_feedstock_ops.__version__ != '0.0.0'"
+          cd -
 
-      #     pip uninstall conda-forge-feedstock-ops --yes
-      #     rm -rf dist/*
-      #     python -m build --sdist . --outdir dist
-      #     pip install --no-deps --no-build-isolation dist/*.tar.gz
-      #     cd ..
-      #     python -c "import conda_forge_feedstock_ops; assert conda_forge_feedstock_ops.__version__ != '0.0.0'"
-      #     cd -
-      #     pip uninstall conda-forge-feedstock-ops --yes
+          pip uninstall conda-forge-feedstock-ops --yes
+          rm -rf dist/*
+          python -m build --sdist . --outdir dist
+          pip install --no-deps --no-build-isolation dist/*.tar.gz
+          cd ..
+          python -c "import conda_forge_feedstock_ops; assert conda_forge_feedstock_ops.__version__ != '0.0.0'"
+          cd -
+          pip uninstall conda-forge-feedstock-ops --yes
 
-      #     python -m pip install -v --no-deps --no-build-isolation -e .
+          python -m pip install -v --no-deps --no-build-isolation -e .
 
-      # - name: set up docker buildx
-      #   uses: docker/setup-buildx-action@v4
+      - name: set up docker buildx
+        uses: docker/setup-buildx-action@v4
 
-      # - name: build docker image
-      #   uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
-      #   with:
-      #     context: .
-      #     push: false
-      #     load: true
-      #     tags: conda-forge-feedstock-ops:test
+      - name: build docker image
+        uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
+        with:
+          context: .
+          push: false
+          load: true
+          tags: conda-forge-feedstock-ops:test
 
-      # - name: ensure cli runs
-      #   run: |
-      #     conda-forge-feedstock-ops-container --help
+      - name: ensure cli runs
+        run: |
+          conda-forge-feedstock-ops-container --help
 
       - name: run tests
+        # fails with package from anaconda.org so try a local install
         run: |
           conda uninstall conda-smithy --force --yes
-          # fails with package from anaconda.org
           git clone https://github.com/conda-forge/conda-smithy.git
           pushd conda-smithy
           # git checkout a393ff525c42701f401bd516f06cffd7343399ae  # 2026.5.29 OK!
@@ -78,24 +78,5 @@ jobs:
           pip install --no-deps --no-build-isolation .
           popd
 
-          git clone https://github.com/conda-forge/conda-forge-feedstock-ops-feedstock.git
-          pushd conda-forge-feedstock-ops-feedstock
-          ls -lah .ci_support/README
-          git ls-files --stage .ci_support/README
-          conda-smithy rerender --no-check-uptodate
-          ls -lah .ci_support/README
-          git ls-files --stage .ci_support/README
-          val=$(git ls-files --stage .ci_support/README | awk '{print $1}')
-          popd
-
-          echo "perms: '${val}'"
-          if [[ "${val}" != "100644" ]]; then
-            echo "bash fail"
-            exit 1
-          else
-            echo "bash OK"
-            exit 0
-          fi
-
-        # export RUST_BACKTRACE=full
-        # pytest -vvs tests --log-cli-level=debug -k test_rerender_containerized_permissions
+          export RUST_BACKTRACE=full
+          pytest -vvs tests --log-cli-level=debug -k test_rerender_containerized_permissions
