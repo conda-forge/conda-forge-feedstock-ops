@@ -646,18 +646,18 @@ def test_container_tasks_is_recipe_solvable_containerized(use_containers):
                 [
                     "git",
                     "clone",
-                    "https://github.com/conda-forge/conda-forge-feedstock-check-solvable-feedstock.git",
+                    "https://github.com/conda-forge/conda-forge-feedstock-ops-feedstock.git",
                 ]
             )
 
         res_cont = is_recipe_solvable(
-            os.path.join(tmpdir, "conda-forge-feedstock-check-solvable-feedstock"),
+            os.path.join(tmpdir, "conda-forge-feedstock-ops-feedstock"),
             use_container=True,
         )
         assert res_cont[0], res_cont
 
         res_local = is_recipe_solvable(
-            os.path.join(tmpdir, "conda-forge-feedstock-check-solvable-feedstock"),
+            os.path.join(tmpdir, "conda-forge-feedstock-ops-feedstock"),
             use_container=False,
         )
         assert res_local[0], res_local
