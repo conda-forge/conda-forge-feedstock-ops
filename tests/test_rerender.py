@@ -19,15 +19,15 @@ def test_rerender_local_stderr(capfd):
             [
                 "git",
                 "clone",
-                "https://github.com/conda-forge/conda-forge-feedstock-check-solvable-feedstock.git",
+                "https://github.com/conda-forge/conda-forge-feedstock-ops-feedstock.git",
             ]
         )
         # make sure rerender happens
-        with pushd("conda-forge-feedstock-check-solvable-feedstock"):
+        with pushd("conda-forge-feedstock-ops-feedstock"):
             cmds = [
                 ["git", "rm", "-f", ".gitignore"],
                 ["git", "rm", "-rf", ".scripts"],
-                ["git", "rm", "-f", ".azure-pipelines/azure-pipelines-linux.yml"],
+                ["git", "rm", "-f", ".github/workflows/conda-build.yml"],
                 ["git", "config", "user.email", "conda@conda.conda"],
                 ["git", "config", "user.name", "conda c. conda"],
                 ["git", "commit", "-m", "test commit"],
@@ -40,7 +40,7 @@ def test_rerender_local_stderr(capfd):
 
         try:
             msg = rerender_local(
-                os.path.join(tmpdir, "conda-forge-feedstock-check-solvable-feedstock"),
+                os.path.join(tmpdir, "conda-forge-feedstock-ops-feedstock"),
             )
         finally:
             captured = capfd.readouterr()
@@ -59,15 +59,15 @@ def test_rerender_local_git_staged():
             [
                 "git",
                 "clone",
-                "https://github.com/conda-forge/conda-forge-feedstock-check-solvable-feedstock.git",
+                "https://github.com/conda-forge/conda-forge-feedstock-ops-feedstock.git",
             ]
         )
         # make sure rerender happens
-        with pushd("conda-forge-feedstock-check-solvable-feedstock"):
+        with pushd("conda-forge-feedstock-ops-feedstock"):
             cmds = [
                 ["git", "rm", "-f", ".gitignore"],
                 ["git", "rm", "-rf", ".scripts"],
-                ["git", "rm", "-f", ".azure-pipelines/azure-pipelines-linux.yml"],
+                ["git", "rm", "-f", ".github/workflows/conda-build.yml"],
                 ["git", "config", "user.email", "conda@conda.conda"],
                 ["git", "config", "user.name", "conda c. conda"],
                 ["git", "commit", "-m", "test commit"],
@@ -79,12 +79,12 @@ def test_rerender_local_git_staged():
                 )
 
         msg = rerender_local(
-            os.path.join(tmpdir, "conda-forge-feedstock-check-solvable-feedstock"),
+            os.path.join(tmpdir, "conda-forge-feedstock-ops-feedstock"),
         )
         assert msg is not None
 
         # check that things are staged in git
-        with pushd("conda-forge-feedstock-check-solvable-feedstock"):
+        with pushd("conda-forge-feedstock-ops-feedstock"):
             ret = subprocess.run(
                 ["git", "diff", "--name-only", "--staged"],
                 stdout=subprocess.PIPE,
@@ -127,15 +127,15 @@ def test_rerender_containerized_same_as_local_own_feedstock(
                 [
                     "git",
                     "clone",
-                    "https://github.com/conda-forge/conda-forge-feedstock-check-solvable-feedstock.git",
+                    "https://github.com/conda-forge/conda-forge-feedstock-ops-feedstock.git",
                 ]
             )
             # make sure rerender happens
-            with pushd("conda-forge-feedstock-check-solvable-feedstock"):
+            with pushd("conda-forge-feedstock-ops-feedstock"):
                 cmds = [
                     ["git", "rm", "-f", ".gitignore"],
                     ["git", "rm", "-rf", ".scripts"],
-                    ["git", "rm", "-f", ".azure-pipelines/azure-pipelines-linux.yml"],
+                    ["git", "rm", "-f", ".github/workflows/conda-build.yml"],
                     ["git", "config", "user.email", "conda@conda.conda"],
                     ["git", "config", "user.name", "conda c. conda"],
                     ["git", "commit", "-m", "test commit"],
@@ -148,9 +148,7 @@ def test_rerender_containerized_same_as_local_own_feedstock(
 
             try:
                 msg = rerender_containerized(
-                    os.path.join(
-                        tmpdir_cont, "conda-forge-feedstock-check-solvable-feedstock"
-                    ),
+                    os.path.join(tmpdir_cont, "conda-forge-feedstock-ops-feedstock"),
                     **rrnd_kwargs,
                 )
             finally:
@@ -164,7 +162,7 @@ def test_rerender_containerized_same_as_local_own_feedstock(
                 assert msg.startswith("MNT:"), (
                     f"msg: {msg}\nout: {captured.out}\nerr: {captured.err}"
                 )
-                with pushd("conda-forge-feedstock-check-solvable-feedstock"):
+                with pushd("conda-forge-feedstock-ops-feedstock"):
                     assert os.path.exists(".github/workflows/conda-build.yml")
             else:
                 assert msg is None, (
@@ -176,15 +174,15 @@ def test_rerender_containerized_same_as_local_own_feedstock(
                 [
                     "git",
                     "clone",
-                    "https://github.com/conda-forge/conda-forge-feedstock-check-solvable-feedstock.git",
+                    "https://github.com/conda-forge/conda-forge-feedstock-ops-feedstock.git",
                 ]
             )
             # make sure rerender happens
-            with pushd("conda-forge-feedstock-check-solvable-feedstock"):
+            with pushd("conda-forge-feedstock-ops-feedstock"):
                 cmds = [
                     ["git", "rm", "-f", ".gitignore"],
                     ["git", "rm", "-rf", ".scripts"],
-                    ["git", "rm", "-f", ".azure-pipelines/azure-pipelines-linux.yml"],
+                    ["git", "rm", "-f", ".github/workflows/conda-build.yml"],
                     ["git", "config", "user.email", "conda@conda.conda"],
                     ["git", "config", "user.name", "conda c. conda"],
                     ["git", "commit", "-m", "test commit"],
@@ -197,16 +195,14 @@ def test_rerender_containerized_same_as_local_own_feedstock(
 
             try:
                 local_msg = rerender_local(
-                    os.path.join(
-                        tmpdir_local, "conda-forge-feedstock-check-solvable-feedstock"
-                    ),
+                    os.path.join(tmpdir_local, "conda-forge-feedstock-ops-feedstock"),
                     **rrnd_kwargs,
                 )
             finally:
                 local_captured = capfd.readouterr()
                 print(f"out: {local_captured.out}\nerr: {local_captured.err}")
 
-            with pushd("conda-forge-feedstock-check-solvable-feedstock"):
+            with pushd("conda-forge-feedstock-ops-feedstock"):
                 assert os.path.exists(".github/workflows/conda-build.yml")
 
         if not use_exclusive_config_file:
@@ -374,15 +370,15 @@ def test_rerender_containerized_empty(use_containers):
                 [
                     "git",
                     "clone",
-                    "https://github.com/conda-forge/conda-forge-feedstock-check-solvable-feedstock.git",
+                    "https://github.com/conda-forge/conda-forge-feedstock-ops-feedstock.git",
                 ]
             )
             # make sure rerender happens
-            with pushd("conda-forge-feedstock-check-solvable-feedstock"):
+            with pushd("conda-forge-feedstock-ops-feedstock"):
                 cmds = [
                     ["git", "rm", "-f", ".gitignore"],
                     ["git", "rm", "-rf", ".scripts"],
-                    ["git", "rm", "-f", ".azure-pipelines/azure-pipelines-linux.yml"],
+                    ["git", "rm", "-f", ".github/workflows/conda-build.yml"],
                     ["git", "config", "user.email", "conda@conda.conda"],
                     ["git", "config", "user.name", "conda c. conda"],
                     ["git", "commit", "-m", "test commit"],
@@ -394,13 +390,11 @@ def test_rerender_containerized_empty(use_containers):
                     )
 
             local_msg = rerender_local(
-                os.path.join(
-                    tmpdir_local, "conda-forge-feedstock-check-solvable-feedstock"
-                ),
+                os.path.join(tmpdir_local, "conda-forge-feedstock-ops-feedstock"),
             )
 
             assert local_msg is not None
-            with pushd("conda-forge-feedstock-check-solvable-feedstock"):
+            with pushd("conda-forge-feedstock-ops-feedstock"):
                 subprocess.run(
                     ["git", "commit", "-am", local_msg],
                     check=True,
@@ -408,9 +402,7 @@ def test_rerender_containerized_empty(use_containers):
 
         # now run in container and make sure commit message is None
         msg = rerender_containerized(
-            os.path.join(
-                tmpdir_local, "conda-forge-feedstock-check-solvable-feedstock"
-            ),
+            os.path.join(tmpdir_local, "conda-forge-feedstock-ops-feedstock"),
         )
 
         assert msg is None
@@ -424,11 +416,11 @@ def test_rerender_containerized_permissions(use_containers):
                 [
                     "git",
                     "clone",
-                    "https://github.com/conda-forge/conda-forge-feedstock-check-solvable-feedstock.git",
+                    "https://github.com/conda-forge/conda-forge-feedstock-ops-feedstock.git",
                 ]
             )
 
-            with pushd("conda-forge-feedstock-check-solvable-feedstock"):
+            with pushd("conda-forge-feedstock-ops-feedstock"):
                 orig_perms_bl = os.stat("build-locally.py").st_mode
                 print(
                     f"\n\ncloned permissions for build-locally.py: {orig_perms_bl:#o}\n\n"
@@ -440,11 +432,11 @@ def test_rerender_containerized_permissions(use_containers):
                 orig_exec = get_user_execute_permissions(".")
 
             local_msg = rerender_local(
-                os.path.join(tmpdir, "conda-forge-feedstock-check-solvable-feedstock"),
+                os.path.join(tmpdir, "conda-forge-feedstock-ops-feedstock"),
             )
 
             if local_msg is not None:
-                with pushd("conda-forge-feedstock-check-solvable-feedstock"):
+                with pushd("conda-forge-feedstock-ops-feedstock"):
                     cmds = [
                         ["git", "config", "user.email", "conda@conda.conda"],
                         ["git", "config", "user.name", "conda c. conda"],
@@ -454,7 +446,7 @@ def test_rerender_containerized_permissions(use_containers):
                         subprocess.run(cmd, check=True)
 
             # now change permissions
-            with pushd("conda-forge-feedstock-check-solvable-feedstock"):
+            with pushd("conda-forge-feedstock-ops-feedstock"):
                 orig_perms_bl = os.stat("build-locally.py").st_mode
                 print(
                     f"\n\ninput permissions for build-locally.py: {orig_perms_bl:#o}\n\n"
@@ -480,11 +472,11 @@ def test_rerender_containerized_permissions(use_containers):
                     )
 
             msg = rerender_containerized(
-                os.path.join(tmpdir, "conda-forge-feedstock-check-solvable-feedstock"),
+                os.path.join(tmpdir, "conda-forge-feedstock-ops-feedstock"),
             )
             assert msg is not None
 
-            with pushd("conda-forge-feedstock-check-solvable-feedstock"):
+            with pushd("conda-forge-feedstock-ops-feedstock"):
                 perms_bl = os.stat("build-locally.py").st_mode
                 print(f"\n\nfinal permissions for build-locally.py: {perms_bl:#o}\n\n")
                 perms_bs = os.stat(".scripts/build_steps.sh").st_mode
