@@ -72,11 +72,13 @@ def _get_existing_feedstock_node_attrs(existing_feedstock_node_attrs):
 
 def _run_bot_task(func, *, log_level, existing_feedstock_node_attrs, **kwargs):
     with (
-        tempfile.TemporaryDirectory() as tmpdir_cbld,
+        tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir_cbld,
         _setenv("CONDA_BLD_PATH", os.path.join(tmpdir_cbld, "conda-bld")),
-        tempfile.TemporaryDirectory() as tmpdir_cache,
+        tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir_cache,
         _setenv("XDG_CACHE_HOME", tmpdir_cache),
-        tempfile.TemporaryDirectory() as tmpdir_conda_pkgs_dirs,
+        tempfile.TemporaryDirectory(
+            ignore_cleanup_errors=True
+        ) as tmpdir_conda_pkgs_dirs,
         _setenv("CONDA_PKGS_DIRS", tmpdir_conda_pkgs_dirs),
     ):
         os.makedirs(os.path.join(tmpdir_cbld, "conda-bld"), exist_ok=True)
@@ -90,7 +92,7 @@ def _run_bot_task(func, *, log_level, existing_feedstock_node_attrs, **kwargs):
         try:
             with (
                 redirect_stdout(sys.stderr),
-                tempfile.TemporaryDirectory() as tmpdir,
+                tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir,
                 pushd(tmpdir),
             ):
                 # logger call needs to be here so it gets the changed stdout/stderr
@@ -155,7 +157,7 @@ def _rerender_feedstock(*, exclusive_config_file, timeout):
 
     logger = logging.getLogger("conda_forge_feedstock_ops.container")
 
-    with tempfile.TemporaryDirectory() as tmpdir:
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
         input_fs_dir = glob.glob("/cf_feedstock_ops_dir/*-feedstock")
         assert len(input_fs_dir) == 1, f"expected one feedstock, got {input_fs_dir}"
         input_fs_dir = input_fs_dir[0]
@@ -276,7 +278,7 @@ def _parse_package_and_feedstock_names():
 
     logger = logging.getLogger("conda_forge_feedstock_ops.container")
 
-    with tempfile.TemporaryDirectory() as tmpdir:
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
         input_fs_dir = glob.glob("/cf_feedstock_ops_dir/*-feedstock")
         assert len(input_fs_dir) == 1, f"expected one feedstock, got {input_fs_dir}"
         input_fs_dir = input_fs_dir[0]
@@ -314,7 +316,7 @@ def _lint():
 
     logger = logging.getLogger("conda_forge_feedstock_ops.container")
 
-    with tempfile.TemporaryDirectory() as tmpdir:
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
         input_fs_dir = "/cf_feedstock_ops_dir"
         logger.debug(
             "input container feedstock dir %s: %s",
