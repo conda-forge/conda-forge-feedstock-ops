@@ -14,7 +14,7 @@ def test_json_round_trip_str():
 def test_json_round_trip_file():
     data = {"a": 1, "b": 2, "c": set([1, 2, 3])}
 
-    with tempfile.TemporaryDirectory() as tmpdir:
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
         fname = os.path.join(tmpdir, "test.json")
         with open(fname, "w") as fp:
             dump(data, fp)

@@ -60,7 +60,7 @@ def _parse_package_and_feedstock_names_containerized(feedstock_dir):
         "parse-package-and-feedstock-names",
     ] + get_default_log_level_args(logger)
 
-    with tempfile.TemporaryDirectory() as tmpdir:
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
         tmp_feedstock_dir = os.path.join(tmpdir, os.path.basename(feedstock_dir))
         sync_dirs(
             feedstock_dir, tmp_feedstock_dir, ignore_dot_git=True, update_git=False

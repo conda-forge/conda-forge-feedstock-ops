@@ -10,7 +10,12 @@ from textwrap import dedent
 import pytest
 import wurlitzer
 from conda.models.version import VersionOrder
-from conftest import DATA_DIR, get_rattler_build_version, skipif_no_containers
+from conftest import (
+    DATA_DIR,
+    clone_and_checkout_repo,
+    get_rattler_build_version,
+    skipif_no_containers,
+)
 from flaky import flaky
 
 from conda_forge_feedstock_ops.check_solvable import is_recipe_solvable
@@ -19,14 +24,6 @@ from conda_forge_feedstock_ops.virtual_packages import (
     FakePackage,
     FakeRepoData,
 )
-
-
-def clone_and_checkout_repo(base_path: pathlib.Path, origin_url: str, ref: str):
-    subprocess.run(
-        f"cd {base_path} && git clone {origin_url} repo",
-        shell=True,
-    )
-    return str(base_path / "repo")
 
 
 @flaky
@@ -640,7 +637,7 @@ def test_v1_unsolvable(tmp_path):
 
 @skipif_no_containers
 def test_container_tasks_is_recipe_solvable_containerized(use_containers):
-    with tempfile.TemporaryDirectory() as tmpdir:
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
         with pushd(tmpdir):
             subprocess.run(
                 [

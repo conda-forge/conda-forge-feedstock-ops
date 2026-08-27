@@ -91,7 +91,7 @@ def rerender_containerized(feedstock_dir, exclusive_config_file=None, timeout=No
     if timeout is not None:
         args += ["--timeout", str(timeout)]
 
-    with tempfile.TemporaryDirectory() as tmpdir:
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
         tmp_feedstock_dir = os.path.join(tmpdir, os.path.basename(feedstock_dir))
         sync_dirs(
             feedstock_dir, tmp_feedstock_dir, ignore_dot_git=True, update_git=False
@@ -272,7 +272,7 @@ def rerender_local(feedstock_dir, exclusive_config_file=None, timeout=None):
 
     with (
         pushd(feedstock_dir),
-        tempfile.TemporaryDirectory() as tmpdir,
+        tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir,
     ):
         ret = _subprocess_run_tee(
             [
