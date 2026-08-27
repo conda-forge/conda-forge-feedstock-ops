@@ -427,13 +427,13 @@ def _convert_feedstock_to_v1():
         _execute_git_cmds_and_report(
             cmds=cmds,
             cwd=fs_dir,
-            msg="git init failed for rerender",
+            msg="git init failed for conversion to v1",
         )
 
         prev_commit = _execute_git_cmds_and_report(
             cmds=[["git", "rev-parse", "HEAD"]],
             cwd=fs_dir,
-            msg="git rev-parse HEAD failed for rerender prev commit",
+            msg="git rev-parse HEAD failed for conversion to v1 prev commit",
             ignore_stderr=True,
         ).strip()
 
@@ -450,7 +450,7 @@ def _convert_feedstock_to_v1():
             _execute_git_cmds_and_report(
                 cmds=cmds,
                 cwd=fs_dir,
-                msg="git status failed for rerender",
+                msg="git status failed for conversion to v1",
             )
 
         if changed:
@@ -467,18 +467,18 @@ def _convert_feedstock_to_v1():
                     ],
                 ],
                 cwd=fs_dir,
-                msg="git commit failed for rerender",
+                msg="git commit failed for conversion to v1",
             )
             curr_commit = _execute_git_cmds_and_report(
                 cmds=[["git", "rev-parse", "HEAD"]],
                 cwd=fs_dir,
-                msg="git rev-parse HEAD failed for rerender curr commit",
+                msg="git rev-parse HEAD failed for conversion to v1 curr commit",
                 ignore_stderr=True,
             ).strip()
             patch = _execute_git_cmds_and_report(
                 cmds=[["git", "diff", prev_commit + ".." + curr_commit]],
                 cwd=fs_dir,
-                msg="git diff failed for rerender",
+                msg="git diff failed for conversion to v1",
                 ignore_stderr=True,
             )
         else:
