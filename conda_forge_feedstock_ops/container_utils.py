@@ -228,11 +228,7 @@ def run_container_operation(
             ret_str = ret["error"]
             ename = "<could not be parsed>"
 
-        tb_str = (
-            ret["traceback"]
-            .encode("raw_unicode_escape")
-            .decode("unicode_escape")
-        )
+        tb_str = ret["traceback"].encode("raw_unicode_escape").decode("unicode_escape")
         raise ContainerRuntimeError(
             error=f"Error running '{' '.join(args)}' in container - error {ename} raised:"
             f"\nerror: {ret_str}"
