@@ -373,6 +373,125 @@ def _check_solvable(
     return data
 
 
+def _convert_feedstock_to_v1(*, exclusive_config_file, timeout):
+    from conda_forge_feedstock_ops.convert import convert_feedstock_to_v1_local
+    from conda_forge_feedstock_ops.os_utils import (
+        get_user_execute_permissions,
+        reset_permissions_with_user_execute,
+        sync_dirs,
+    )
+
+    logger = logging.getLogger("conda_forge_feedstock_ops.container")
+
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
+        input_fs_dir = glob.glob("/cf_feedstock_ops_dir/*-feedstock")
+        assert len(input_fs_dir) == 1, f"expected one feedstock, got {input_fs_dir}"
+        input_fs_dir = input_fs_dir[0]
+        logger.debug(
+            "input container feedstock dir %s: %s",
+            input_fs_dir,
+            os.listdir(input_fs_dir),
+        )
+        input_permissions = os.path.join(
+            "/cf_feedstock_ops_dir",
+            f"permissions-{os.path.basename(input_fs_dir)}.json",
+        )
+        with open(input_permissions) as f:
+            input_permissions = json.load(f)
+
+        fs_dir = os.path.join(tmpdir, os.path.basename(input_fs_dir))
+        sync_dirs(input_fs_dir, fs_dir, ignore_dot_git=True, update_git=False)
+        logger.debug(
+            "copied container feedstock dir %s: %s", fs_dir, os.listdir(fs_dir)
+        )
+
+        reset_permissions_with_user_execute(fs_dir, input_permissions)
+
+        has_gitignore = os.path.exists(os.path.join(fs_dir, ".gitignore"))
+        if has_gitignore:
+            shutil.move(
+                os.path.join(fs_dir, ".gitignore"),
+                os.path.join(fs_dir, ".gitignore.bak"),
+            )
+
+        cmds = [
+            ["git", "init", "-b", "main", "."],
+            ["git", "add", "."],
+            ["git", "commit", "-am", "initial commit"],
+        ]
+        if has_gitignore:
+            cmds += [
+                ["git", "mv", ".gitignore.bak", ".gitignore"],
+                ["git", "commit", "-am", "put back gitignore"],
+            ]
+        _execute_git_cmds_and_report(
+            cmds=cmds,
+            cwd=fs_dir,
+            msg="git init failed for rerender",
+        )
+
+        prev_commit = _execute_git_cmds_and_report(
+            cmds=[["git", "rev-parse", "HEAD"]],
+            cwd=fs_dir,
+            msg="git rev-parse HEAD failed for rerender prev commit",
+            ignore_stderr=True,
+        ).strip()
+
+        changed = convert_feedstock_to_v1_local(fs_dir)
+
+        if logger.getEffectiveLevel() <= logging.DEBUG:
+            cmds = [
+                ["git", "status"],
+                ["git", "diff", "--name-only"],
+                ["git", "diff", "--name-only", "--staged"],
+                ["git", "--no-pager", "diff"],
+                ["git", "--no-pager", "diff", "--staged"],
+            ]
+            _execute_git_cmds_and_report(
+                cmds=cmds,
+                cwd=fs_dir,
+                msg="git status failed for rerender",
+            )
+
+        if changed:
+            output_permissions = get_user_execute_permissions(fs_dir)
+
+            _execute_git_cmds_and_report(
+                cmds=[
+                    ["git", "add", "-f", "."],
+                    [
+                        "git",
+                        "commit",
+                        "-am",
+                        "commit to compute diff for recipe conversion",
+                    ],
+                ],
+                cwd=fs_dir,
+                msg="git commit failed for rerender",
+            )
+            curr_commit = _execute_git_cmds_and_report(
+                cmds=[["git", "rev-parse", "HEAD"]],
+                cwd=fs_dir,
+                msg="git rev-parse HEAD failed for rerender curr commit",
+                ignore_stderr=True,
+            ).strip()
+            patch = _execute_git_cmds_and_report(
+                cmds=[["git", "diff", prev_commit + ".." + curr_commit]],
+                cwd=fs_dir,
+                msg="git diff failed for rerender",
+                ignore_stderr=True,
+            )
+        else:
+            patch = None
+            output_permissions = input_permissions
+
+        return {
+            "changed": changed,
+            "patch": patch,
+            "permissions": output_permissions,
+        }
+
+
 @click.group()
 def main_container():
     pass
@@ -465,4 +584,13 @@ def check_solvable(
         build_platform=build_platform,
         solver=solver,
         fail_fast=fail_fast,
+    )
+
+
+@main_container.command(name="convert-feedstock-to-v1")
+@log_level_option
+def main_container_convert_feedstock_to_v1(log_level):
+    return _run_bot_task(
+        _convert_feedstock_to_v1,
+        log_level=log_level,
     )

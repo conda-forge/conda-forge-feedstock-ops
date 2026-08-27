@@ -637,7 +637,7 @@ def test_v1_unsolvable(tmp_path):
 
 @skipif_no_containers
 def test_container_tasks_is_recipe_solvable_containerized(use_containers):
-    with tempfile.TemporaryDirectory() as tmpdir:
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
         with pushd(tmpdir):
             subprocess.run(
                 [

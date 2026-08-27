@@ -38,7 +38,7 @@ def invoke_rattler_build(
     # this is OK since there is an lru cache
     virtual_package_repo_url = virtual_package_repodata()
     # create a temporary file and dump the variants as YAML
-    with tempfile.TemporaryDirectory() as tmpdir:
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
         variants_file_name = os.path.join(tmpdir, str(uuid.uuid4()) + ".yaml")
         with open(variants_file_name, "w") as fp:
             channel_sources = variants.get("channel_sources", [])

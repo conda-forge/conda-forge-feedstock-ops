@@ -14,7 +14,10 @@ from conda_forge_feedstock_ops.rerender import rerender_containerized, rerender_
 
 
 def test_rerender_local_stderr(capfd):
-    with tempfile.TemporaryDirectory() as tmpdir, pushd(tmpdir):
+    with (
+        tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir,
+        pushd(tmpdir),
+    ):
         subprocess.run(
             [
                 "git",
@@ -54,7 +57,10 @@ def test_rerender_local_stderr(capfd):
 
 
 def test_rerender_local_git_staged():
-    with tempfile.TemporaryDirectory() as tmpdir, pushd(tmpdir):
+    with (
+        tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir,
+        pushd(tmpdir),
+    ):
         subprocess.run(
             [
                 "git",
@@ -117,8 +123,8 @@ def test_rerender_containerized_same_as_local_own_feedstock(
         rrnd_kwargs = {}
 
     with (
-        tempfile.TemporaryDirectory() as tmpdir_cont,
-        tempfile.TemporaryDirectory() as tmpdir_local,
+        tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir_cont,
+        tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir_local,
     ):
         assert tmpdir_cont != tmpdir_local
 
@@ -244,8 +250,8 @@ def test_rerender_containerized_same_as_local_own_feedstock(
 @skipif_no_containers
 def test_rerender_containerized_same_as_local_pinnings(use_containers, capfd):
     with (
-        tempfile.TemporaryDirectory() as tmpdir_cont,
-        tempfile.TemporaryDirectory() as tmpdir_local,
+        tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir_cont,
+        tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir_local,
     ):
         assert tmpdir_cont != tmpdir_local
 
@@ -363,7 +369,7 @@ def test_rerender_containerized_same_as_local_pinnings(use_containers, capfd):
 
 @skipif_no_containers
 def test_rerender_containerized_empty(use_containers):
-    with tempfile.TemporaryDirectory() as tmpdir_local:
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir_local:
         # first run the rerender locally
         with pushd(tmpdir_local):
             subprocess.run(
@@ -410,7 +416,7 @@ def test_rerender_containerized_empty(use_containers):
 
 @skipif_no_containers
 def test_rerender_containerized_permissions(use_containers):
-    with tempfile.TemporaryDirectory() as tmpdir:
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
         with pushd(tmpdir):
             subprocess.run(
                 [

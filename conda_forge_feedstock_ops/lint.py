@@ -53,7 +53,7 @@ def _lint_containerized(feedstock_dir):
         "lint",
     ] + get_default_log_level_args(logger)
 
-    with tempfile.TemporaryDirectory() as tmpdir:
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
         sync_dirs(feedstock_dir, tmpdir, ignore_dot_git=True, update_git=False)
         chmod_plus_rwX(tmpdir, recursive=True)
 
