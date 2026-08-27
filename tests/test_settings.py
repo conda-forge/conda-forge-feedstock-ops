@@ -2,9 +2,9 @@ import os
 from unittest import mock
 
 import pytest
+from conda_forge_feedstock_ops._version import __version__  # noqa
 from pydantic import ValidationError
 
-from conda_forge_feedstock_ops._version import __version__  # noqa
 from conda_forge_feedstock_ops.settings import FeedstockOpsSettings
 
 
