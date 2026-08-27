@@ -593,4 +593,5 @@ def main_container_convert_feedstock_to_v1(log_level):
     return _run_bot_task(
         _convert_feedstock_to_v1,
         log_level=log_level,
+        existing_feedstock_node_attrs=None,
     )
