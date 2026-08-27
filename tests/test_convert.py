@@ -2,12 +2,12 @@ import os
 
 import pytest
 from conftest import clone_and_checkout_repo, skipif_no_containers
-from ruamel.yaml import YAML
 
 from conda_forge_feedstock_ops.convert import (
     convert_feedstock_to_v1_containerized,
     convert_feedstock_to_v1_local,
 )
+from conda_forge_feedstock_ops.utils import get_yaml_parser
 
 
 @pytest.mark.parametrize(
@@ -31,7 +31,7 @@ def test_convert_convert_to_v1_containerized(tmp_path, feedstock_name):
     assert os.path.exists(cf_yaml_path)
 
     with open(cf_yaml_path) as fp:
-        cf_yaml = YAML().load(fp.read())
+        cf_yaml = get_yaml_parser().load(fp.read())
     assert "conda_build_tool" in cf_yaml
     assert cf_yaml["conda_build_tool"] == "rattler-build"
 
@@ -56,7 +56,7 @@ def test_convert_convert_to_v1_local(tmp_path, feedstock_name):
     assert os.path.exists(cf_yaml_path)
 
     with open(cf_yaml_path) as fp:
-        cf_yaml = YAML().load(fp.read())
+        cf_yaml = get_yaml_parser().load(fp.read())
     assert "conda_build_tool" in cf_yaml
     assert cf_yaml["conda_build_tool"] == "rattler-build"
 
@@ -83,7 +83,7 @@ def test_convert_convert_to_v1_local_raises(tmp_path, feedstock_name):
     assert os.path.exists(cf_yaml_path)
 
     with open(cf_yaml_path) as fp:
-        cf_yaml = YAML().load(fp.read())
+        cf_yaml = get_yaml_parser().load(fp.read())
     assert (
         "conda_build_tool" not in cf_yaml
         or "rattler-build" not in cf_yaml["conda_build_tool"]
@@ -115,7 +115,7 @@ def test_convert_convert_to_v1_containerized_raises(tmp_path, feedstock_name):
     assert os.path.exists(cf_yaml_path)
 
     with open(cf_yaml_path) as fp:
-        cf_yaml = YAML().load(fp.read())
+        cf_yaml = get_yaml_parser().load(fp.read())
     assert (
         "conda_build_tool" not in cf_yaml
         or "rattler-build" not in cf_yaml["conda_build_tool"]

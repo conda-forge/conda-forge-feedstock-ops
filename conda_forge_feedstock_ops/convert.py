@@ -5,8 +5,6 @@ import shutil
 import subprocess
 import tempfile
 
-from ruamel.yaml import YAML
-
 from conda_forge_feedstock_ops.container_utils import (
     get_default_log_level_args,
     run_container_operation,
@@ -18,6 +16,7 @@ from conda_forge_feedstock_ops.os_utils import (
     reset_permissions_with_user_execute,
     sync_dirs,
 )
+from conda_forge_feedstock_ops.utils import get_yaml_parser
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +50,7 @@ def convert_feedstock_to_v1(feedstock_dir, use_container=None):
 
 
 def convert_feedstock_to_v1_containerized(feedstock_dir):
-    """Convert a feedstock to the v1 recipe format.
+    """Convert a feedstock to the v1 recipe format inside of a container.
 
     Parameters
     ----------
@@ -126,22 +125,6 @@ def convert_feedstock_to_v1_containerized(feedstock_dir):
     return data["changed"]
 
 
-def _get_yaml_parser(typ="jinja2"):
-    """Yaml parser that is jinja2 aware."""
-    # using a function here so settings are always the same
-
-    def represent_none(self, data):
-        return self.represent_scalar("tag:yaml.org,2002:null", "")
-
-    parser = YAML(typ=typ)  # spellchecker:disable-line
-    parser.indent(mapping=2, sequence=4, offset=2)
-    parser.width = 320
-    parser.preserve_quotes = True
-    parser.representer.ignore_aliases = lambda x: True
-    parser.representer.add_representer(type(None), represent_none)
-    return parser
-
-
 def _post_process_returncode_and_stderr(returncode, stderr):
     new_lines = []
     for line in stderr.splitlines():
@@ -177,6 +160,18 @@ def _post_process_returncode_and_stderr(returncode, stderr):
 
 
 def convert_feedstock_to_v1_local(feedstock_dir: str):
+    """Convert a feedstock to the v1 recipe format.
+
+    Parameters
+    ----------
+    feedstock_dir : str
+        The path to the feedstock directory.
+
+    Returns
+    -------
+    bool
+        Return True if changes were made, False otherwise.
+    """
     recipe_yaml_pth = os.path.join(feedstock_dir, "recipe", "recipe.yaml")
     meta_yaml_pth = os.path.join(feedstock_dir, "recipe", "meta.yaml")
     cf_yaml_path = os.path.join(feedstock_dir, "conda-forge.yml")
@@ -221,7 +216,7 @@ def convert_feedstock_to_v1_local(feedstock_dir: str):
 
         changed = True
 
-    yaml = _get_yaml_parser()
+    yaml = get_yaml_parser()
     with open(cf_yaml_path) as fp:
         cf_yaml = yaml.load(fp.read())
 
