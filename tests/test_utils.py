@@ -28,7 +28,7 @@ from conda_forge_feedstock_ops.utils import (
         ("blah >=1.1|5| >=5 , <10 |19.0", "blah >=1.1|5.*|>=5,<10|19.0.*"),
     ],
 )
-def test_convert_spec_to_conda_build(inreq, outreq):
+def test_utils_convert_spec_to_conda_build(inreq, outreq):
     assert convert_spec_to_conda_build(inreq) == outreq
 
 
@@ -99,7 +99,7 @@ def test_utils_get_run_exports(full_channel_url, filename, expected):
     )
 
 
-def test_apply_pin_compatible():
+def test_utils_apply_pin_compatible():
     version = "1.2.3"
     build = "h24524543_0"
     assert _apply_pin_compatible(version, build) == ">=1.2.3,<2.0a0"
@@ -121,7 +121,7 @@ def test_apply_pin_compatible():
     )
 
 
-def test_replace_pin_compatible():
+def test_utils_replace_pin_compatible():
     host_reqs = [
         "foo 1.2.3 5",
         "bar 2.3 1",
@@ -143,7 +143,7 @@ def test_replace_pin_compatible():
     ]
 
 
-def test_replace_pin_compatible_raises():
+def test_utils_replace_pin_compatible_raises():
     with pytest.raises(ValueError) as e:
         replace_pin_compatible(["pin_compatible('foo') mpi_*"], [], strict=True)
     assert "Package foo not found in host" in str(e.value)
