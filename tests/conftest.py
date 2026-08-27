@@ -169,8 +169,11 @@ def get_rattler_build_version():
 
 
 def clone_and_checkout_repo(base_path: pathlib.Path, origin_url: str, ref: str):
+    clone_dir = os.path.basename(origin_url)
+    if clone_dir.endswith(".git"):
+        clone_dir = clone_dir[: -len(".git")]
     subprocess.run(
-        f"cd {base_path} && git clone {origin_url} repo",
+        f"cd {base_path} && git clone {origin_url} && cd {clone_dir} && git checkout {ref}",
         shell=True,
     )
-    return str(base_path / "repo")
+    return str(base_path / clone_dir)

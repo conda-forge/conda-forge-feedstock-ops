@@ -216,6 +216,7 @@ def convert_feedstock_to_v1_local(feedstock_dir: str):
             ["git", "rm", "-f", os.path.join("recipe", "meta.yaml")],
             cwd=feedstock_dir,
             check=False,
+            capture_output=True,
         )
 
         changed = True

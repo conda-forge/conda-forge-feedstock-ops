@@ -373,7 +373,7 @@ def _check_solvable(
     return data
 
 
-def _convert_feedstock_to_v1(*, exclusive_config_file, timeout):
+def _convert_feedstock_to_v1():
     from conda_forge_feedstock_ops.convert import convert_feedstock_to_v1_local
     from conda_forge_feedstock_ops.os_utils import (
         get_user_execute_permissions,
