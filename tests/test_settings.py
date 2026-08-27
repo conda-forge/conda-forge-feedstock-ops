@@ -4,7 +4,7 @@ from unittest import mock
 import pytest
 from pydantic import ValidationError
 
-from conda_forge_feedstock_ops._version import __version__  # isort: skip
+from conda_forge_feedstock_ops import __version__
 from conda_forge_feedstock_ops.settings import FeedstockOpsSettings
 
 
