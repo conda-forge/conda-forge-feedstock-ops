@@ -35,6 +35,10 @@ def test_convert_convert_to_v1_containerized(tmp_path, feedstock_name):
     assert "conda_build_tool" in cf_yaml
     assert cf_yaml["conda_build_tool"] == "rattler-build"
 
+    with open(recipe_yaml_pth) as fp:
+        recipe_yaml = fp.read()
+    assert not recipe_yaml.endswith("\n\n")
+
 
 @pytest.mark.parametrize(
     "feedstock_name",
