@@ -38,7 +38,14 @@ def test_convert_convert_to_v1_containerized(tmp_path, feedstock_name):
 
 @pytest.mark.parametrize(
     "feedstock_name",
-    ["ngmix", "galsim", "stackvana-core", "openmpi", "rustfits"],
+    [
+        "cf-autotick-bot-test-package",
+        "ngmix",
+        "galsim",
+        "stackvana-core",
+        "openmpi",
+        "rustfits",
+    ],
 )
 def test_convert_convert_to_v1_local(tmp_path, feedstock_name):
     feedstock_dir = clone_and_checkout_repo(
