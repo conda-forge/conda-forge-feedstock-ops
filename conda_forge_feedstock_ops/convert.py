@@ -144,7 +144,12 @@ def _post_process_returncode_and_stderr(returncode, stderr):
         if "Could not patch unrecognized license" in line:
             continue
 
-        if "errors and" in line and "warning" in line and line.startswith("0"):
+        if (
+            " error" in line
+            and " and " in line
+            and " warning" in line
+            and line.startswith("0")
+        ):
             continue
 
         new_lines.append(line.strip())
