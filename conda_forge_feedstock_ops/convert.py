@@ -205,8 +205,12 @@ def convert_feedstock_to_v1_local(feedstock_dir: str):
                 f"original meta.yaml:\n{meta_yaml}"
             )
 
+        recipe_yaml = ret.stdout
+        if recipe_yaml.endswith("\n\n"):
+            recipe_yaml = recipe_yaml[:-1]
+
         with open(recipe_yaml_pth, "w") as fp:
-            fp.write(ret.stdout)
+            fp.write(recipe_yaml)
 
         subprocess.run(
             ["git", "rm", "-f", os.path.join("recipe", "meta.yaml")],
