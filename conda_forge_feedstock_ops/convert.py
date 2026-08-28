@@ -145,8 +145,9 @@ def _post_process_returncode_and_stderr(returncode, stderr):
             continue
 
         if (
-            "errors and" in line
-            and "warnings were found." in line
+            " error" in line
+            and " and " in line
+            and " warning" in line
             and line.startswith("0")
         ):
             continue
