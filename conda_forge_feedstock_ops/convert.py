@@ -181,7 +181,7 @@ def convert_feedstock_to_v1_local(feedstock_dir: str):
 
     if (not os.path.exists(recipe_yaml_pth)) and os.path.exists(meta_yaml_pth):
         ret = subprocess.run(
-            ["conda-recipe-manager", "convert", meta_yaml_pth],
+            ["conda-recipe-manager", "convert", "--also-test-latest-python", meta_yaml_pth],
             capture_output=True,
             text=True,
             check=False,
