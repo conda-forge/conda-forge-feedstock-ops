@@ -137,6 +137,8 @@ def _post_process_returncode_and_stderr(returncode, stderr):
         "license_family",
         # build
         "pre-link",
+        # we do not ignore this since
+        # folks need to do something with it.
         "noarch_python",
         "features",
         "msvc_compiler",
