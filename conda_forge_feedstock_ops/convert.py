@@ -139,7 +139,7 @@ def _post_process_returncode_and_stderr(returncode, stderr):
         "pre-link",
         # we do not ignore this since
         # folks need to do something with it.
-        "noarch_python",
+        # "noarch_python",
         "features",
         "msvc_compiler",
         "requires_features",
