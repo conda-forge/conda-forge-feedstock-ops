@@ -176,6 +176,9 @@ def _post_process_returncode_and_stderr(returncode, stderr):
         if "Could not patch unrecognized license" in line:
             continue
 
+        if "Version on dependency changed to: python {{ python_min }}.*" in line:
+            continue
+
         if (
             " error" in line
             and " and " in line
