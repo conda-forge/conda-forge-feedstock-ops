@@ -5,6 +5,7 @@ import shutil
 import subprocess
 import tempfile
 
+from conda_forge_feedstock_ops.build_number_bump import update_build_number_v1
 from conda_forge_feedstock_ops.container_utils import (
     get_default_log_level_args,
     run_container_operation,
@@ -251,6 +252,8 @@ def convert_feedstock_to_v1_local(feedstock_dir: str):
 
         with open(recipe_yaml_pth, "w") as fp:
             fp.write(recipe_yaml)
+
+        changed |= update_build_number_v1(recipe_yaml_pth, lambda x: x + 1)
 
         subprocess.run(
             ["git", "rm", "-f", os.path.join("recipe", "meta.yaml")],

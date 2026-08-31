@@ -38,6 +38,8 @@ def test_convert_convert_to_v1_containerized(tmp_path, feedstock_name):
     with open(recipe_yaml_pth) as fp:
         recipe_yaml = fp.read()
     assert not recipe_yaml.endswith("\n\n")
+    if feedstock_name == "cf-autotick-bot-test-package":
+        assert "number: 1" in recipe_yaml
 
 
 @pytest.mark.parametrize(
@@ -74,6 +76,8 @@ def test_convert_convert_to_v1_local(tmp_path, feedstock_name):
     with open(recipe_yaml_pth) as fp:
         recipe_yaml = fp.read()
     assert not recipe_yaml.endswith("\n\n")
+    if feedstock_name == "cf-autotick-bot-test-package":
+        assert "number: 1" in recipe_yaml
 
 
 @pytest.mark.parametrize(
