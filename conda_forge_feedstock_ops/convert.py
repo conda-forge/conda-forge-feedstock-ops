@@ -152,13 +152,16 @@ def _post_process_returncode_and_stderr(returncode, stderr):
         # "rpaths_patcher",
         "post-link",
         "pre-unlink",
-        "pre-link",        
+        "pre-link",
     ]
     new_lines = []
     for line in stderr.splitlines():
         line = line.strip()
         # ignore field deprecations
-        if any(f"/{df}" in line and "Field at" in line and "no longer supported" for df in deprecated_fields):
+        if any(
+            f"/{df}" in line and "Field at" in line and "no longer supported"
+            for df in deprecated_fields
+        ):
             continue
 
         if (
