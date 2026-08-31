@@ -136,25 +136,23 @@ def _post_process_returncode_and_stderr(returncode, stderr):
         "doc_source_url",
         "license_family",
         # build
-        "pre-link",
-        # we do not ignore this since
-        # folks need to do something with it.
+        # we do not ignore these since
+        # folks need to do something with them.
+        # "pre-link",
         # "noarch_python",
-        "features",
-        "msvc_compiler",
-        "requires_features",
-        "provides_features",
-        "preferred_env",
-        "preferred_env_executable_paths",
-        "disable_pip",
-        "pin_depends",
-        "overlinking_ignore_patterns",
-        # we do not ignore rpaths_patcher since this
-        # change could be important, maybe?
+        # "features",
+        # "msvc_compiler",
+        # "requires_features",
+        # "provides_features",
+        # "preferred_env",
+        # "preferred_env_executable_paths",
+        # "disable_pip",
+        # "pin_depends",
+        # "overlinking_ignore_patterns",
         # "rpaths_patcher",
-        "post-link",
-        "pre-unlink",
-        "pre-link",
+        # "post-link",
+        # "pre-unlink",
+        # "pre-link",
     ]
     new_lines = []
     for line in stderr.splitlines():
