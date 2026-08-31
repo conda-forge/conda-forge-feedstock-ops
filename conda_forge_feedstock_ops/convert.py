@@ -126,10 +126,39 @@ def convert_feedstock_to_v1_containerized(feedstock_dir):
 
 
 def _post_process_returncode_and_stderr(returncode, stderr):
+    deprecated_fields = [
+        # about
+        "prelink_message",
+        "license_family",
+        "identifiers",
+        "tags",
+        "keywords",
+        "doc_source_url",
+        "license_family",
+        # build
+        "pre-link",
+        "noarch_python",
+        "features",
+        "msvc_compiler",
+        "requires_features",
+        "provides_features",
+        "preferred_env",
+        "preferred_env_executable_paths",
+        "disable_pip",
+        "pin_depends",
+        "overlinking_ignore_patterns",
+        # we do not ignore rpaths_patcher since this
+        # change could be important, maybe?
+        # "rpaths_patcher",
+        "post-link",
+        "pre-unlink",
+        "pre-link",        
+    ]
     new_lines = []
     for line in stderr.splitlines():
         line = line.strip()
-        if "license_family" in line:
+        # ignore field deprecations
+        if any(f"/{df}" in line and "Field at" in line and "no longer supported" for df in deprecated_fields):
             continue
 
         if (
