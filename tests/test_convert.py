@@ -1,4 +1,5 @@
 import os
+import re
 
 import pytest
 from conftest import clone_and_checkout_repo, skipif_no_containers
@@ -9,17 +10,32 @@ from conda_forge_feedstock_ops.convert import (
 )
 from conda_forge_feedstock_ops.utils import get_yaml_parser
 
+PYTHON_V1_MIN_SUB_RE = re.compile(
+    r"python \$\{\{\s*python_min\s*\}\}(\s|$)",
+    flags=re.MULTILINE,
+)
+
+FEEDSTOCK_NAME_REF_LIST = [
+    ("cf-autotick-bot-test-package", "main"),
+    ("ngmix", "main"),
+    ("galsim", "main"),
+    ("stackvana-core", "main"),
+    ("openmpi", "main"),
+    ("rustfits", "main"),
+    ("conda-index", "ee3e0a3a161857f9d04e9f58ae7ecc05879ea084"),
+]
+
 
 @pytest.mark.parametrize(
-    "feedstock_name",
-    ["ngmix", "galsim", "stackvana-core", "openmpi", "rustfits"],
+    "feedstock_name,ref",
+    FEEDSTOCK_NAME_REF_LIST,
 )
 @skipif_no_containers
-def test_convert_convert_to_v1_containerized(tmp_path, feedstock_name):
+def test_convert_convert_to_v1_containerized(tmp_path, feedstock_name, ref):
     feedstock_dir = clone_and_checkout_repo(
         tmp_path,
         f"https://github.com/conda-forge/{feedstock_name}-feedstock",
-        ref="main",
+        ref=ref,
     )
     recipe_yaml_pth = os.path.join(feedstock_dir, "recipe", "recipe.yaml")
     meta_yaml_pth = os.path.join(feedstock_dir, "recipe", "meta.yaml")
@@ -40,24 +56,18 @@ def test_convert_convert_to_v1_containerized(tmp_path, feedstock_name):
     assert not recipe_yaml.endswith("\n\n")
     if feedstock_name == "cf-autotick-bot-test-package":
         assert "number: 1" in recipe_yaml
+    assert not PYTHON_V1_MIN_SUB_RE.search(recipe_yaml)
 
 
 @pytest.mark.parametrize(
-    "feedstock_name",
-    [
-        "cf-autotick-bot-test-package",
-        "ngmix",
-        "galsim",
-        "stackvana-core",
-        "openmpi",
-        "rustfits",
-    ],
+    "feedstock_name,ref",
+    FEEDSTOCK_NAME_REF_LIST,
 )
-def test_convert_convert_to_v1_local(tmp_path, feedstock_name):
+def test_convert_convert_to_v1_local(tmp_path, feedstock_name, ref):
     feedstock_dir = clone_and_checkout_repo(
         tmp_path,
         f"https://github.com/conda-forge/{feedstock_name}-feedstock",
-        ref="main",
+        ref=ref,
     )
     recipe_yaml_pth = os.path.join(feedstock_dir, "recipe", "recipe.yaml")
     meta_yaml_pth = os.path.join(feedstock_dir, "recipe", "meta.yaml")
@@ -78,6 +88,9 @@ def test_convert_convert_to_v1_local(tmp_path, feedstock_name):
     assert not recipe_yaml.endswith("\n\n")
     if feedstock_name == "cf-autotick-bot-test-package":
         assert "number: 1" in recipe_yaml
+    assert not PYTHON_V1_MIN_SUB_RE.search(recipe_yaml)
+
+    print(recipe_yaml)
 
 
 @pytest.mark.parametrize(

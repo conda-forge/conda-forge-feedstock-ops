@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -20,6 +21,13 @@ from conda_forge_feedstock_ops.os_utils import (
 from conda_forge_feedstock_ops.utils import get_yaml_parser
 
 logger = logging.getLogger(__name__)
+
+
+PYTHON_MIN_SUB_RE = re.compile(
+    r"python\s+\{\{\s*python_min\s*\}\}(\s|$)",
+    flags=re.MULTILINE,
+)
+PYTHON_MIN_SUB_VALUE = r"python ${{ python_min }}.*\1"
 
 
 def convert_feedstock_to_v1(feedstock_dir, use_container=None):
@@ -216,6 +224,12 @@ def convert_feedstock_to_v1_local(feedstock_dir: str):
     changed = False
 
     if (not os.path.exists(recipe_yaml_pth)) and os.path.exists(meta_yaml_pth):
+        with open(meta_yaml_pth) as fp:
+            meta_yaml = fp.read()
+        meta_yaml = PYTHON_MIN_SUB_RE.sub(PYTHON_MIN_SUB_VALUE, meta_yaml)
+        with open(meta_yaml_pth, "w") as fp:
+            fp.write(meta_yaml)
+
         ret = subprocess.run(
             [
                 "conda-recipe-manager",
