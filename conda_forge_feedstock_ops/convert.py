@@ -204,6 +204,26 @@ def _post_process_returncode_and_stderr(returncode, stderr):
         return returncode, stderr
 
 
+def _print_debugging_info(returncode, stderr):
+    ret = subprocess.run(
+        ["conda-recipe-manager", "--version"],
+        text=True,
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
+    logger.info(
+        "===== CRM DEBUG INFO =====\n"
+        "conda-recipe-manager version: %s\n"
+        "returncode: %d\n"
+        "conversion stderr:\n%s\n"
+        "===== CRM DEBUG INFO =====",
+        ret.stdout.strip(),
+        returncode,
+        stderr,
+    )
+
+
 def convert_feedstock_to_v1_local(feedstock_dir: str):
     """Convert a feedstock to the v1 recipe format.
 
@@ -241,6 +261,7 @@ def convert_feedstock_to_v1_local(feedstock_dir: str):
             text=True,
             check=False,
         )
+        _print_debugging_info(ret.returncode, ret.stderr)
 
         returncode, stderr = _post_process_returncode_and_stderr(
             ret.returncode, ret.stderr
