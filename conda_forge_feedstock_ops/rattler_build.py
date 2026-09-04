@@ -51,7 +51,7 @@ def invoke_rattler_build(
                     for source in channel_sources
                 ]
 
-            yaml = get_yaml_parser()
+            yaml = get_yaml_parser(typ="rt")
             yaml.dump(
                 {k: v for k, v in variants.items()},
                 fp,

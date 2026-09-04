@@ -278,7 +278,7 @@ def convert_feedstock_to_v1_local(feedstock_dir: str):
 
         changed = True
 
-    yaml = get_yaml_parser()
+    yaml = get_yaml_parser(typ="rt")
     with open(cf_yaml_path) as fp:
         cf_yaml = yaml.load(fp.read())
 

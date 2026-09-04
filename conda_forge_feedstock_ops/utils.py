@@ -697,8 +697,8 @@ def clean_rattler_cache():
     )
 
 
-def get_yaml_parser(typ="jinja2"):
-    """Yaml parser that is jinja2 aware."""
+def get_yaml_parser(*, typ):
+    """Yaml parser that can be jinja2 aware and handles None."""
     # using a function here so settings are always the same
 
     def represent_none(self, data):

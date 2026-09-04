@@ -47,7 +47,7 @@ def test_convert_convert_to_v1_containerized(tmp_path, feedstock_name, ref):
     assert os.path.exists(cf_yaml_path)
 
     with open(cf_yaml_path) as fp:
-        cf_yaml = get_yaml_parser().load(fp.read())
+        cf_yaml = get_yaml_parser(typ="rt").load(fp.read())
     assert "conda_build_tool" in cf_yaml
     assert cf_yaml["conda_build_tool"] == "rattler-build"
 
@@ -79,7 +79,7 @@ def test_convert_convert_to_v1_local(tmp_path, feedstock_name, ref):
     assert os.path.exists(cf_yaml_path)
 
     with open(cf_yaml_path) as fp:
-        cf_yaml = get_yaml_parser().load(fp.read())
+        cf_yaml = get_yaml_parser(typ="rt").load(fp.read())
     assert "conda_build_tool" in cf_yaml
     assert cf_yaml["conda_build_tool"] == "rattler-build"
 
@@ -115,7 +115,7 @@ def test_convert_convert_to_v1_local_raises(tmp_path, feedstock_name):
     assert os.path.exists(cf_yaml_path)
 
     with open(cf_yaml_path) as fp:
-        cf_yaml = get_yaml_parser().load(fp.read())
+        cf_yaml = get_yaml_parser(typ="rt").load(fp.read())
     assert (
         "conda_build_tool" not in cf_yaml
         or "rattler-build" not in cf_yaml["conda_build_tool"]
@@ -147,7 +147,7 @@ def test_convert_convert_to_v1_containerized_raises(tmp_path, feedstock_name):
     assert os.path.exists(cf_yaml_path)
 
     with open(cf_yaml_path) as fp:
-        cf_yaml = get_yaml_parser().load(fp.read())
+        cf_yaml = get_yaml_parser(typ="rt").load(fp.read())
     assert (
         "conda_build_tool" not in cf_yaml
         or "rattler-build" not in cf_yaml["conda_build_tool"]
