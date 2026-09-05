@@ -44,11 +44,13 @@ REQ_START_NOSTAR = ["!=", "==", ">", "<", ">=", "<=", "~="]
 
 ALL_PLATFORMS = {
     "linux-aarch64",
+    "linux-riscv64",
     "linux-ppc64le",
     "linux-64",
     "osx-64",
     "osx-arm64",
     "win-64",
+    "win-arm64",
 }
 
 MINIMUM_CUDA_VERS = [
