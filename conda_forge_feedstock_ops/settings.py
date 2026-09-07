@@ -66,7 +66,9 @@ class FeedstockOpsSettings(BaseSettings):
     Whether to use a proxy that is locally configured for all requests inside the container.
     """
 
-    proxy_in_container: ClassVar[HttpProxyUrl] = Field(default_factory=get_docker_host_hostname)
+    proxy_in_container: ClassVar[HttpProxyUrl] = Field(
+        default_factory=get_docker_host_hostname
+    )
     """
     The hostname of the proxy to use in the container.
     The default value should reference the Docker host's hostname and works for
