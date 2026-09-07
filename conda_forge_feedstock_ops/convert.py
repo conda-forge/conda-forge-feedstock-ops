@@ -6,7 +6,6 @@ import shutil
 import subprocess
 import tempfile
 
-from conda_forge_feedstock_ops.build_number_bump import update_build_number_v1
 from conda_forge_feedstock_ops.container_utils import (
     get_default_log_level_args,
     run_container_operation,
@@ -18,6 +17,7 @@ from conda_forge_feedstock_ops.os_utils import (
     reset_permissions_with_user_execute,
     sync_dirs,
 )
+from conda_forge_feedstock_ops.update_build_number import update_build_number_v1
 from conda_forge_feedstock_ops.utils import get_yaml_parser
 
 logger = logging.getLogger(__name__)
