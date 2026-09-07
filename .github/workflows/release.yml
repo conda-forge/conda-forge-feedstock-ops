@@ -55,3 +55,11 @@ jobs:
           provider: dockerhub
           short_description: "conda-forge image used for containerized feedstock operations"
           readme_file: "Dockerfile_README.md"
+
+      - name: update feedstock version
+        uses: beckermr/update-feedstock-version@afbac79908156f5078a557a9fd6f9ef1d59ddfde # v5
+        with:
+          feedstock: conda-forge-feedstock-ops-feedstock
+          version: ${{ github.event.release.tag_name }}
+          github-token: ${{ secrets.AUTOTICK_BOT_TOKEN }}
+          automerge: false
