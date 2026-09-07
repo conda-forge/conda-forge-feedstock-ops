@@ -1,5 +1,5 @@
 import sys
-from typing import Annotated, Self
+from typing import Annotated, ClassVar, Self
 
 from pydantic import AfterValidator, AnyHttpUrl, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -34,22 +34,22 @@ class FeedstockOpsSettings(BaseSettings):
 
     model_config = SettingsConfigDict(env_prefix="CF_FEEDSTOCK_OPS_")
 
-    container_name: str = "condaforge/conda-forge-feedstock-ops"
+    container_name: ClassVar[str] = "condaforge/conda-forge-feedstock-ops"
     """
     The Docker image name to use for the container.
     """
 
-    container_tag: str = __version__
+    container_tag: ClassVar[str] = __version__
     """
     The Docker image tag to use for the container. Defaults to the current version of this package.
     """
 
-    verbosity: int = 1
+    verbosity: ClassVar[int] = 1
     """
     The verbosity of the solver checks: 0 is no output, 3 is a lot of output.
     """
 
-    in_container: bool = False
+    in_container: ClassVar[bool] = False
     """
     Whether the code is already running inside a container.
     """
@@ -61,12 +61,12 @@ class FeedstockOpsSettings(BaseSettings):
         """
         return f"{self.container_name}:{self.container_tag}"
 
-    container_proxy_mode: bool = False
+    container_proxy_mode: ClassVar[bool] = False
     """
     Whether to use a proxy that is locally configured for all requests inside the container.
     """
 
-    proxy_in_container: HttpProxyUrl = Field(default_factory=get_docker_host_hostname)
+    proxy_in_container: ClassVar[HttpProxyUrl] = Field(default_factory=get_docker_host_hostname)
     """
     The hostname of the proxy to use in the container.
     The default value should reference the Docker host's hostname and works for
