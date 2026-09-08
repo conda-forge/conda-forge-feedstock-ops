@@ -19,7 +19,7 @@ import re
 from collections.abc import Callable
 from typing import Any
 
-from conda_forge_feedstock_ops.utils import get_yaml_parser
+from conda_forge_feedstock_ops.yaml import get_yaml_parser
 
 RE_PATTERN = re.compile(r"(?:build|build_number|number):\s*(\d+)")
 DEFAULT_BUILD_PATTERNS = (

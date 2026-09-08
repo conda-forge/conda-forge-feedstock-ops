@@ -246,7 +246,11 @@ def _is_recipe_solvable(
 
     timeout_timer.raise_for_timeout()
 
-    with override_env("CONDA_OVERRIDE_GLIBC", f"2.{MAX_GLIBC_MINOR:d}"):
+    with (
+        override_env("CONDA_OVERRIDE_GLIBC", f"2.{MAX_GLIBC_MINOR:d}"),
+        tempfile.TemporaryDirectory() as cb_tmp_dir,
+        override_env("CONDA_BLD_PATH", str(cb_tmp_dir)),
+    ):
         errors = []
         cbcs = sorted(glob.glob(os.path.join(feedstock_dir, ".ci_support", "*.yaml")))
         if len(cbcs) == 0:

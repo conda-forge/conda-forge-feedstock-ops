@@ -14,22 +14,25 @@ dependencies:
   - conda-package-handling
   - conda-recipe-manager
   - conda-smithy >=2026
+  - jinja2
   - orjson
   - pixi
   - py-rattler >=0.22.0,<0.26a0
   - pydantic >=2.13
   - pydantic-settings >=2.15.0,<3.0.0
-  - python >=3.11
   - rattler-build-conda-compat >=1.4.15,<2.0.0a0
   - requests
   - ruamel.yaml
   - ruamel.yaml.jinja2
   - wurlitzer
   - zstandard
-  # dev dependencies
+  # build
+  - python >=3.11
   - pip
+  - python-build
   - setuptools
   - setuptools_scm
-  - python-build
-  - pytest
+  # dev dependencies
   - flaky
+  - pytest
+  - pytest-xdist

@@ -18,7 +18,7 @@ from conda_forge_feedstock_ops.os_utils import (
     sync_dirs,
 )
 from conda_forge_feedstock_ops.update_build_number import update_build_number_v1
-from conda_forge_feedstock_ops.utils import get_yaml_parser
+from conda_forge_feedstock_ops.yaml import get_yaml_parser
 
 logger = logging.getLogger(__name__)
 
