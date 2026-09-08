@@ -32,4 +32,5 @@ dependencies:
   - setuptools_scm
   - python-build
   - pytest
+  - pytest-xdist
   - flaky
