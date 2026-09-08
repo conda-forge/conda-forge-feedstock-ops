@@ -90,7 +90,10 @@ def _pypi_name_munger(url):
     for pattern in patterns:
         for dist_bn_case in {dist_bn, dist_bn.lower()}:
             yield os.path.join(
-                dn, "{}-{{{{ version }}}}.tar.gz".format(re.sub(pattern, "_", dist_bn_case))
+                dn,
+                "{}-{{{{ version }}}}.tar.gz".format(
+                    re.sub(pattern, "_", dist_bn_case)
+                ),
             )
 
 
