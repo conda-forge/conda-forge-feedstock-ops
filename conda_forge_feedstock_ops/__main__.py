@@ -25,6 +25,7 @@ import traceback
 from contextlib import contextmanager, redirect_stdout
 
 import click
+import orjson
 
 existing_feedstock_node_attrs_option = click.option(
     "--existing-feedstock-node-attrs",
@@ -353,7 +354,7 @@ def _check_solvable(
 ):
     from conda_forge_feedstock_ops.check_solvable import is_recipe_solvable
 
-    logger = logging.getLogger("conda_forge_tick.container")
+    logger = logging.getLogger("conda_forge_feedstock_ops.container")
 
     logger.debug(
         "input container feedstock dir /cf_feedstock_ops_dir: %s",
@@ -492,6 +493,59 @@ def _convert_feedstock_to_v1():
         }
 
 
+def _update_version(*, version, hash_type):
+    from conda_forge_feedstock_ops.os_utils import (
+        chmod_plus_rwX,
+        get_user_execute_permissions,
+        reset_permissions_with_user_execute,
+        sync_dirs,
+    )
+    from conda_forge_feedstock_ops.update_version import (
+        update_version_local,
+    )
+
+    logger = logging.getLogger("conda_forge_feedstock_ops.container")
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        input_fs_dir_list = glob.glob("/cf_feedstock_ops_dir/*-feedstock")
+        assert len(input_fs_dir_list) == 1, (
+            f"expected one feedstock, got {input_fs_dir_list}"
+        )
+        input_fs_dir = input_fs_dir_list[0]
+        logger.debug(
+            "input container feedstock dir %s: %s",
+            input_fs_dir,
+            os.listdir(input_fs_dir),
+        )
+        input_permissions = os.path.join(
+            "/cf_feedstock_ops_dir",
+            f"permissions-{os.path.basename(input_fs_dir)}.json",
+        )
+        with open(input_permissions, "rb") as f:
+            input_permissions = orjson.loads(f.read())
+
+        fs_dir = os.path.join(tmpdir, os.path.basename(input_fs_dir))
+        sync_dirs(input_fs_dir, fs_dir, ignore_dot_git=True, update_git=False)
+        logger.debug(
+            "copied container feedstock dir %s: %s", fs_dir, os.listdir(fs_dir)
+        )
+
+        reset_permissions_with_user_execute(fs_dir, input_permissions)
+
+        updated, errors = update_version_local(
+            fs_dir,
+            version,
+            hash_type,
+        )
+        data = {"updated": updated, "errors": errors}
+
+        data["permissions"] = get_user_execute_permissions(fs_dir)
+        sync_dirs(fs_dir, input_fs_dir, ignore_dot_git=True, update_git=False)
+        chmod_plus_rwX(input_fs_dir, recursive=True, skip_on_error=True)
+
+    return data
+
+
 @click.group()
 def main_container():
     pass
@@ -594,4 +648,27 @@ def main_container_convert_feedstock_to_v1(log_level):
         _convert_feedstock_to_v1,
         log_level=log_level,
         existing_feedstock_node_attrs=None,
+    )
+
+
+@main_container.command(name="update-version")
+@log_level_option
+@click.option("--version", type=str, required=True, help="The version to update to.")
+@click.option(
+    "--hash-type",
+    type=str,
+    required=True,
+    help="The type of hash to use.",
+)
+def update_version(
+    log_level,
+    version,
+    hash_type,
+):
+    return _run_bot_task(
+        _update_version,
+        log_level=log_level,
+        existing_feedstock_node_attrs=None,
+        version=version,
+        hash_type=hash_type,
     )
