@@ -7,8 +7,8 @@ with modifications.
 """
 
 import glob
+import itertools
 import os
-import re
 import tempfile
 
 import pytest
@@ -16,14 +16,20 @@ from conftest import skipif_no_containers
 
 from conda_forge_feedstock_ops.update_build_number import update_build_number
 from conda_forge_feedstock_ops.update_version import update_version
-
-V0_VERSION_RE = re.compile(r"\{}")
+from conda_forge_feedstock_ops.yaml import get_yaml_parser
 
 YAML_PATH_V0 = os.path.join(
     os.path.dirname(__file__),
     "data",
     "update_version_tests",
     "v0_yaml",
+)
+
+YAML_PATH_V1 = os.path.join(
+    os.path.dirname(__file__),
+    "data",
+    "update_version_tests",
+    "v1_yaml",
 )
 
 
@@ -86,7 +92,7 @@ def _collect_all_v0_recipe_info():
         pytest.param(True, marks=[skipif_no_containers]),
     ],
 )
-def test_update_version_update_version_v0_local(fs_name, version, use_container):
+def test_update_version_update_version_v0(fs_name, version, use_container):
     with tempfile.TemporaryDirectory() as tmpdir:
         no_up_tuples = [
             ("badvernoup", "10.12.0"),
@@ -126,6 +132,112 @@ def test_update_version_update_version_v0_local(fs_name, version, use_container)
             actual_output = f.read()
 
         with open(os.path.join(YAML_PATH_V0, f"version_{fs_name}_correct.yaml")) as fp:
+            output = fp.read()
+
+        assert actual_output == output
+
+
+def _collect_all_v1_recipe_info():
+    yaml = get_yaml_parser(typ="rt")
+
+    fnames = sorted(
+        list(glob.glob(os.path.join(YAML_PATH_V1, "version_*_correct.yaml")))
+    )
+    for fname in fnames:
+        ver = None
+        with open(fname) as fp:
+            data = yaml.load(fp.read())
+
+        if "context" in data and "version" in data["context"]:
+            ver = str(data["context"]["version"])
+
+        if ver is None:
+            raise RuntimeError(f"Could not parse version from file {fname}!")
+
+        fs_name = os.path.basename(fname)[len("version_") : -len("_correct.yaml")]
+        if fs_name == "libssh":
+            yval = pytest.param(
+                fs_name,
+                ver,
+                marks=pytest.mark.xfail(reason="libssh urls tend to error a lot"),
+            )
+        else:
+            yval = pytest.param(fs_name, ver)
+
+        yield yval
+
+
+@pytest.mark.parametrize(
+    "fs_name,version",
+    sorted(list(_collect_all_v1_recipe_info()), key=lambda x: x[0]),
+)
+@pytest.mark.parametrize(
+    "use_container",
+    [
+        False,
+        pytest.param(True, marks=[skipif_no_containers]),
+    ],
+)
+def test_update_version_update_version_v1(fs_name, version, use_container):
+    yaml = get_yaml_parser(typ="rt")
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        fs_dir = os.path.join(tmpdir, f"{fs_name}-feedstock")
+        rp_dir = os.path.join(fs_dir, "recipe")
+        os.makedirs(rp_dir, exist_ok=True)
+        with open(os.path.join(rp_dir, "recipe.yaml"), "w") as f:
+            with open(os.path.join(YAML_PATH_V1, f"version_{fs_name}.yaml")) as fp:
+                f.write(fp.read())
+
+            variants_pth = os.path.join(
+                YAML_PATH_V1, f"version_{fs_name}_variants.yaml"
+            )
+            os.makedirs(os.path.join(fs_dir, ".ci_support"), exist_ok=True)
+
+            if os.path.exists(variants_pth):
+                with open(variants_pth) as fp:
+                    cbc_text = fp.read()
+
+                with open(os.path.join(rp_dir, "conda_build_config.yaml"), "w") as fp:
+                    fp.write(cbc_text)
+
+                build_variants = yaml.load(cbc_text)
+            else:
+                build_variants = {}
+
+            if "target_platform" not in build_variants:
+                build_variants["target_platform"] = ["linux-64", "osx-arm64", "win-64"]
+
+            # move target_platform to the beginning of the keys
+            build_variants = {
+                "target_platform": build_variants.pop("target_platform"),
+                **build_variants,
+            }
+
+            for assignment in itertools.product(*build_variants.values()):
+                assignment_map = dict(zip(build_variants.keys(), assignment))
+                variant_name = "_".join(
+                    str(value).replace("-", "_").replace("/", "")
+                    for value in assignment_map.values()
+                )
+                var_pth = os.path.join(fs_dir, ".ci_support", f"{variant_name}_.yaml")
+                with open(var_pth, "w") as fp:
+                    yaml.dump({k: [v] for k, v in assignment_map.items()}, fp)
+
+        updated, errors = update_version(
+            fs_dir,
+            version,
+            use_container=use_container,
+        )
+
+        assert updated, errors
+        assert not errors, errors
+        update_build_number(os.path.join(rp_dir, "recipe.yaml"), 0)
+
+        with open(os.path.join(rp_dir, "recipe.yaml")) as f:
+            actual_output = f.read()
+
+        with open(os.path.join(YAML_PATH_V1, f"version_{fs_name}_correct.yaml")) as fp:
             output = fp.read()
 
         assert actual_output == output

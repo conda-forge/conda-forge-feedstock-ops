@@ -6,7 +6,7 @@
 schema_version: 1
 
 context:
-  version: "2.6.0"
+  version: 2.6.0
   build: 0
   triton: 3.2.0
   mkl: <2025
@@ -40,12 +40,13 @@ outputs:
         - if: build_platform != target_platform
           then:
             - if: megabuild
-              then:
-                - python 3.12.*
-                - numpy  *
-              else:
-                - python
-                - numpy
+              then: python 3.12.*
+            - if: megabuild
+              then: numpy  *
+            - if: not megabuild
+              then: python
+            - if: not megabuild
+              then: numpy
             - cross-python_${{ target_platform }}
         - ${{ stdlib('c') }}
         - ${{ compiler('c') }}
@@ -54,7 +55,8 @@ outputs:
           then: ${{ compiler('cuda') }}
         - if: not win
           then: llvm-openmp
-          else:
+        - if: win
+          then:
             - intel-openmp ${{ mkl }}
             - libuv
         - cmake
@@ -68,59 +70,75 @@ outputs:
         - if: win
           then: sccache
         - if: unix
-          then:
-            - grep
-            - rsync
+          then: grep
+        - if: unix
+          then: rsync
       host:
         # GPU requirements
+        - if: "cuda_compiler_version != \"None\" and linux"
+          then: nccl
         - if: "cuda_compiler_version != \"None\""
-          then:
-            - if: "linux"
-              then: nccl
-            - cudnn
-            - magma
-            - cuda-version ${{ cuda_compiler_version }}
-            - nvtx-c
-            - if: "linux"
-              then: cuda-driver-dev
-            - cuda-cudart-dev
-            - cuda-cupti-dev
-            - cuda-nvrtc-dev
-            - cuda-nvtx-dev
-            - cuda-nvml-dev
-            - cuda-profiler-api
-            - cusparselt
-            - libcublas-dev
-            - libcudss-dev
-            - if: "linux"
-              then: libcufile-dev
-            - libcufft-dev
-            - libcurand-dev
-            - libcusolver-dev
-            - libcusparse-dev
+          then: cudnn
+        - if: "cuda_compiler_version != \"None\""
+          then: magma
+        - if: "cuda_compiler_version != \"None\""
+          then: cuda-version ${{ cuda_compiler_version }}
+        - if: "cuda_compiler_version != \"None\""
+          then: nvtx-c
+        - if: "linux and cuda_compiler_version != \"None\""
+          then: cuda-driver-dev
+        - if: "cuda_compiler_version != \"None\""
+          then: cuda-cudart-dev
+        - if: "cuda_compiler_version != \"None\""
+          then: cuda-cupti-dev
+        - if: "cuda_compiler_version != \"None\""
+          then: cuda-nvrtc-dev
+        - if: "cuda_compiler_version != \"None\""
+          then: cuda-nvtx-dev
+        - if: "cuda_compiler_version != \"None\""
+          then: cuda-nvml-dev
+        - if: "cuda_compiler_version != \"None\""
+          then: cuda-profiler-api
+        - if: "cuda_compiler_version != \"None\""
+          then: cusparselt
+        - if: "cuda_compiler_version != \"None\""
+          then: libcublas-dev
+        - if: "cuda_compiler_version != \"None\""
+          then: libcudss-dev
+        - if: "linux and cuda_compiler_version != \"None\""
+          then: libcufile-dev
+        - if: "cuda_compiler_version != \"None\""
+          then: libcufft-dev
+        - if: "cuda_compiler_version != \"None\""
+          then: libcurand-dev
+        - if: "cuda_compiler_version != \"None\""
+          then: libcusolver-dev
+        - if: "cuda_compiler_version != \"None\""
+          then: libcusparse-dev
+        # other requirements
         - if: megabuild
-          else:
-            - python
-            - numpy
-          then:
-            - python 3.12.*
-            - numpy *
+          else: python
+          then: python 3.12.*
+        - if: megabuild
+          else: numpy
+          then: numpy *
         - pip
         - setuptools
         - pyyaml
         - requests
         - six
         - if: "blas_impl == \"mkl\""
-          then:
-            - mkl-devel ${{ mkl }}
-            - libcblas * *_mkl
+          then: mkl-devel ${{ mkl }}
+        - if: "blas_impl == \"mkl\""
+          then: libcblas * *_mkl
           else:
             - libblas
             - libcblas
             - liblapack
         - if: not win
           then: llvm-openmp
-          else: intel-openmp ${{ mkl }}
+        - if: win
+          then: intel-openmp ${{ mkl }}
         - libabseil
         - libprotobuf
         - sleef
@@ -141,14 +159,17 @@ outputs:
           then: libblas * *${{ blas_impl }}
       run_constraints:
         - if: "cuda_compiler_version == \"None\""
-          then:
-            - pytorch-cpu ==${{ version }}
-            - pytorch-gpu ==99999999
-            - pytorch =${{ version }} cpu_${{ blas_impl }}_*_${{ build }}
+          then: pytorch-cpu ==${{ version }}
           else:
             - pytorch-gpu ==${{ version }}
-            - pytorch-cpu ==99999999
-            - pytorch =${{ version }} cuda${{ cuda_compiler_version | replace('.', '') }}_${{ blas_impl }}_*_${{ build }}
+        - if: "cuda_compiler_version == \"None\""
+          then:
+            - pytorch-gpu ==99999999
+          else: pytorch-cpu ==99999999
+        - if: "cuda_compiler_version == \"None\""
+          then: pytorch =${{ version }} cpu_${{ blas_impl }}_*_${{ build }}
+        - if: "cuda_compiler_version != \"None\""
+          then: pytorch =${{ version }} cuda${{ cuda_compiler_version | replace('.', '') }}_${{ blas_impl }}_*_${{ build }}
         - if: "unix and blas_impl != \"mkl\""
           then: openblas * openmp_*
 
@@ -158,9 +179,9 @@ outputs:
       build:
         - python
         - if: build_platform != target_platform
-          then:
-            - cross-python_${{ target_platform }}
-            - numpy
+          then: cross-python_${{ target_platform }}
+        - if: build_platform != target_platform
+          then: numpy
         - ${{ stdlib('c') }}
         - ${{ compiler('c') }}
         - ${{ compiler('cxx') }}
@@ -183,30 +204,46 @@ outputs:
         - ${{ pin_subpackage('libtorch', exact=True) }}
         # GPU requirements
         - if: "cuda_compiler_version != \"None\""
-          then:
-            - cudnn
-            - if: "linux"
-              then: nccl
-            - cuda-version ${{ cuda_compiler_version }}
-            - nvtx-c
-            - magma
-            - if: "linux"
-              then: cuda-driver-dev
-            - cuda-cudart-dev
-            - cuda-cupti-dev
-            - cuda-nvrtc-dev
-            - cuda-nvtx-dev
-            - cuda-nvml-dev
-            - cuda-profiler-api
-            - cusparselt
-            - libcublas-dev
-            - libcudss-dev
-            - if: "linux"
-              then: libcufile-dev
-            - libcufft-dev
-            - libcurand-dev
-            - libcusolver-dev
-            - libcusparse-dev
+          then: cudnn
+        - if: "cuda_compiler_version != \"None\" and linux"
+          then: nccl
+        - if: "cuda_compiler_version != \"None\""
+          then: cuda-version ${{ cuda_compiler_version }}
+        - if: "cuda_compiler_version != \"None\""
+          then: nvtx-c
+        - if: "cuda_compiler_version != \"None\""
+          then: magma
+        - if: "linux and cuda_compiler_version != \"None\""
+          then: cuda-driver-dev
+        - if: "cuda_compiler_version != \"None\""
+          then: cuda-cudart-dev
+        - if: "cuda_compiler_version != \"None\""
+          then: cuda-cupti-dev
+        - if: "cuda_compiler_version != \"None\""
+          then: cuda-nvrtc-dev
+        - if: "cuda_compiler_version != \"None\""
+          then: cuda-nvtx-dev
+        - if: "cuda_compiler_version != \"None\""
+          then: cuda-nvml-dev
+        - if: "cuda_compiler_version != \"None\""
+          then: cuda-profiler-api
+        - if: "cuda_compiler_version != \"None\""
+          then: cusparselt
+        - if: "cuda_compiler_version != \"None\""
+          then: libcublas-dev
+        - if: "cuda_compiler_version != \"None\""
+          then: libcudss-dev
+        - if: "linux and cuda_compiler_version != \"None\""
+          then: libcufile-dev
+        - if: "cuda_compiler_version != \"None\""
+          then: libcufft-dev
+        - if: "cuda_compiler_version != \"None\""
+          then: libcurand-dev
+        - if: "cuda_compiler_version != \"None\""
+          then: libcusolver-dev
+        - if: "cuda_compiler_version != \"None\""
+          then: libcusparse-dev
+        # other requirements
         - python
         - numpy
         - pip
@@ -215,15 +252,16 @@ outputs:
         - requests
         - six
         - if: "blas_impl == \"mkl\""
-          then:
-            - mkl-devel ${{ mkl }}
-            - libcblas * *_mkl
-          else:
-            - libcblas
-            - liblapack
+          then: mkl-devel ${{ mkl }}
+        - if: "blas_impl == \"mkl\""
+          else: libcblas
+          then: libcblas * *_mkl
+        - if: "blas_impl != \"mkl\""
+          then: liblapack
         - if: not win
           then: llvm-openmp
-          else: intel-openmp ${{ mkl }}
+        - if: win
+          then: intel-openmp ${{ mkl }}
         - libabseil
         - libprotobuf
         - pybind11
@@ -239,20 +277,24 @@ outputs:
           then: ${{ pin_subpackage('libtorch', exact=True) }}
         # for non-megabuild, allow libtorch from any python version;
         # pinning build number would be nice but breaks conda
-          else: libtorch ${{ version }}.*
+        - if: not megabuild
+          then: libtorch ${{ version }}.*
         - if: not win
           then: llvm-openmp
-          else: intel-openmp ${{ mkl }}
+        - if: win
+          then: intel-openmp ${{ mkl }}
         - if: "blas_impl == \"mkl\""
           then: libblas * *${{ blas_impl }}
-          else: nomkl
+        - if: "blas_impl != \"mkl\""
+          then: nomkl
+        # GPU requirements without run_exports
         - if: "cuda_compiler_version != \"None\""
-          then:
-            - ${{ pin_compatible('cudnn') }}
-            - if: "not win"
-              then: triton =${{ triton }}
+          then: ${{ pin_compatible('cudnn') }}
+        - if: "cuda_compiler_version != \"None\" and not win"
+          then: triton =${{ triton }}
         # avoid that people without GPUs needlessly download ~0.5-1GB
-            - __cuda
+        - if: "cuda_compiler_version != \"None\""
+          then: __cuda
         - python
         # other requirements, see https://github.com/pytorch/pytorch/blame/main/requirements.txt
         - filelock
@@ -271,9 +313,9 @@ outputs:
           else:
             - pytorch-gpu ==${{ version }}
             - pytorch-cpu ==99999999
-          then:
-            - pytorch-cpu ==${{ version }}
-            - pytorch-gpu ==99999999
+          then: pytorch-cpu ==${{ version }}
+        - if: "cuda_compiler_version == \"None\""
+          then: pytorch-gpu ==99999999
     tests:
       - python:
           imports:
@@ -314,18 +356,21 @@ outputs:
           - if: linux or osx
             then: "python -c \"import torch; assert torch.distributed.is_available()\""
           - if: "cuda_compiler_version != \"None\""
-            then:
-              - "python -c \"import torch; assert torch.backends.cuda.is_built()\""
-              - "python -c \"import torch; assert torch.backends.cudnn.is_available()\""
-              - "python -c \"import torch; assert torch.backends.cudnn.enabled\""
-              - "python -c \"import torch; assert torch.version.cuda is not None\""
+            then: "python -c \"import torch; assert torch.backends.cuda.is_built()\""
+          - if: "cuda_compiler_version != \"None\""
+            then: "python -c \"import torch; assert torch.backends.cudnn.is_available()\""
+          - if: "cuda_compiler_version != \"None\""
+            then: "python -c \"import torch; assert torch.backends.cudnn.enabled\""
+          - if: "cuda_compiler_version != \"None\""
+            then: "python -c \"import torch; assert torch.version.cuda is not None\""
           - if: unix
             then: test -f $PREFIX/lib/libtorch_python${SHLIB_EXT}
           - if: win
-            then:
-              - if not exist %LIBRARY_BIN%\torch_python.dll exit 1
-              - if not exist %SP_DIR%\torch\lib\torch_python.lib exit 1
-              - if not exist %SP_DIR%\torch\lib\_C.lib exit 1
+            then: if not exist %LIBRARY_BIN%\torch_python.dll exit 1
+          - if: win
+            then: if not exist %SP_DIR%\torch\lib\torch_python.lib exit 1
+          - if: win
+            then: if not exist %SP_DIR%\torch\lib\_C.lib exit 1
           - if: match(python, "!=3.13") and unix
             then: test ! -f $SP_DIR/functorch/__pycache__/__init__.cpython-313.pyc
           - if: match(python, "!=3.13") and win
