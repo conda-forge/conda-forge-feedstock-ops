@@ -35,4 +35,3 @@ dependencies:
   # dev dependencies
   - flaky
   - pytest
-  - pytest-xdist
