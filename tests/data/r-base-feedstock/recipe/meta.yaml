@@ -33,8 +33,6 @@ build:
 
 outputs:
   - name: r-base
-    script: build-r-base.sh  # [not win]
-    script: bld-r-base.bat  # [win]
     build:
       merge_build_host: true  # [win]
       rpaths:
@@ -197,7 +195,6 @@ outputs:
   - name: cross-r-base
     build:
       skip: true  # [win]
-    script: install-cross-activate.sh
     requirements:
       run:
         - {{ pin_subpackage("r-base", exact=True) }}
