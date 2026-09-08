@@ -8,6 +8,7 @@ from conda_forge_feedstock_ops.convert import (
     convert_feedstock_to_v1_containerized,
     convert_feedstock_to_v1_local,
 )
+from conda_forge_feedstock_ops.update_build_number import RE_PATTERN
 from conda_forge_feedstock_ops.yaml import get_yaml_parser
 
 PYTHON_V1_MIN_SUB_RE = re.compile(
@@ -26,6 +27,14 @@ FEEDSTOCK_NAME_REF_LIST = [
 ]
 
 
+def _old_build_number(recipe_text: str) -> int:
+    match = re.search(RE_PATTERN, recipe_text)
+    if match is not None:
+        return int(match.group(1))
+    else:
+        return None
+
+
 @pytest.mark.parametrize(
     "feedstock_name,ref",
     FEEDSTOCK_NAME_REF_LIST,
@@ -41,6 +50,15 @@ def test_convert_convert_to_v1_containerized(tmp_path, feedstock_name, ref):
     meta_yaml_pth = os.path.join(feedstock_dir, "recipe", "meta.yaml")
     cf_yaml_path = os.path.join(feedstock_dir, "conda-forge.yml")
 
+    if os.path.exists(meta_yaml_pth):
+        with open(meta_yaml_pth) as fp:
+            orig_bnum = _old_build_number(fp.read())
+    else:
+        with open(recipe_yaml_pth) as fp:
+            orig_bnum = _old_build_number(fp.read())
+        if orig_bnum is not None:
+            orig_bnum = orig_bnum - 1
+
     convert_feedstock_to_v1_containerized(feedstock_dir)
     assert os.path.exists(recipe_yaml_pth)
     assert not os.path.exists(meta_yaml_pth)
@@ -54,8 +72,8 @@ def test_convert_convert_to_v1_containerized(tmp_path, feedstock_name, ref):
     with open(recipe_yaml_pth) as fp:
         recipe_yaml = fp.read()
     assert not recipe_yaml.endswith("\n\n")
-    if feedstock_name == "cf-autotick-bot-test-package":
-        assert "number: 1" in recipe_yaml
+    if orig_bnum is not None:
+        assert f"number: {orig_bnum + 1:d}" in recipe_yaml
     assert not PYTHON_V1_MIN_SUB_RE.search(recipe_yaml)
 
 
@@ -73,6 +91,15 @@ def test_convert_convert_to_v1_local(tmp_path, feedstock_name, ref):
     meta_yaml_pth = os.path.join(feedstock_dir, "recipe", "meta.yaml")
     cf_yaml_path = os.path.join(feedstock_dir, "conda-forge.yml")
 
+    if os.path.exists(meta_yaml_pth):
+        with open(meta_yaml_pth) as fp:
+            orig_bnum = _old_build_number(fp.read())
+    else:
+        with open(recipe_yaml_pth) as fp:
+            orig_bnum = _old_build_number(fp.read())
+        if orig_bnum is not None:
+            orig_bnum = orig_bnum - 1
+
     convert_feedstock_to_v1_local(feedstock_dir)
     assert os.path.exists(recipe_yaml_pth)
     assert not os.path.exists(meta_yaml_pth)
@@ -86,11 +113,9 @@ def test_convert_convert_to_v1_local(tmp_path, feedstock_name, ref):
     with open(recipe_yaml_pth) as fp:
         recipe_yaml = fp.read()
     assert not recipe_yaml.endswith("\n\n")
-    if feedstock_name == "cf-autotick-bot-test-package":
-        assert "number: 1" in recipe_yaml
+    if orig_bnum is not None:
+        assert f"number: {orig_bnum + 1:d}" in recipe_yaml
     assert not PYTHON_V1_MIN_SUB_RE.search(recipe_yaml)
-
-    print(recipe_yaml)
 
 
 @pytest.mark.parametrize(
