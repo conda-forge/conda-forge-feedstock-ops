@@ -1,3 +1,11 @@
+"""
+Code from conda-forge-bot under BSD-3-Clause
+
+  https://github.com/conda-forge/conda-forge-bot/blob/main/License
+
+with modifications.
+"""
+
 import pytest
 
 from conda_forge_feedstock_ops.hashing import _hash_url, hash_url

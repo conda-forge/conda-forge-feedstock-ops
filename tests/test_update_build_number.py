@@ -1,3 +1,11 @@
+"""
+Code from conda-forge-bot under BSD-3-Clause
+
+  https://github.com/conda-forge/conda-forge-bot/blob/main/License
+
+with modifications.
+"""
+
 import pytest
 
 from conda_forge_feedstock_ops.update_build_number import update_build_number
