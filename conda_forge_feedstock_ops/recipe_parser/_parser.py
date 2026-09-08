@@ -7,7 +7,8 @@ import jinja2
 import jinja2.meta
 import jinja2.sandbox
 import orjson
-from ruamel.yaml import YAML
+
+from conda_forge_feedstock_ops.yaml import get_yaml_parser
 
 CONDA_SELECTOR = "__###conda-selector###__"
 
@@ -45,32 +46,6 @@ BAD_MULTILINE_STRING_WITH_SELECTOR = re.compile(r"[^|#]*\|\s+#")
 BAD_JINJA2_SET_STATEMENT = re.compile(
     r"^\s*({%-\s+set\s+.*?=.*?-?%}|{%-?\s+set\s+.*?=.*?-%})\s*(#.*)?$"
 )
-
-
-def get_yaml_parser(typ="jinja2"):
-    """Yaml parser that is jinja2 aware."""
-    # using a function here so settings are always the same
-
-    parser = YAML(typ=typ)  # spellchecker:disable-line
-    parser.indent(mapping=2, sequence=4, offset=2)
-    parser.width = 320
-    parser.preserve_quotes = True
-
-    # represent None as an empty string
-    class _DummyRepresenter(parser.Representer):  # type: ignore[name-defined]
-        pass
-
-    def represent_none(self, data):
-        return self.represent_scalar("tag:yaml.org,2002:null", "")
-
-    _DummyRepresenter.add_representer(type(None), represent_none)
-    parser.Representer = _DummyRepresenter
-    parser.representer.add_representer(type(None), represent_none)
-
-    # do not use yaml anchors
-    parser.representer.ignore_aliases = lambda x: True
-
-    return parser
 
 
 def _line_is_only_selector(line):
@@ -625,7 +600,7 @@ class CondaMetaYAML:
             lines.append(_munge_line(line))
 
         # parse with yaml
-        self._parser = get_yaml_parser()
+        self._parser = get_yaml_parser(typ="jinja2")
         self.meta = self._parser.load("".join(lines))
 
         # undo munging of jinja2 variables '<{ var }}' -> '{{ var }}'
@@ -675,7 +650,7 @@ class CondaMetaYAML:
 
         # get a new parser since it carries state about the jinja2 munging
         # that we don't want to ruin
-        _parser = get_yaml_parser()
+        _parser = get_yaml_parser(typ="jinja2")
         return _parser.load(jinja2.Template(tmpl).render(**jinja2_vars))
 
     def dumps(self):

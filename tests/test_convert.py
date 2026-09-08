@@ -8,7 +8,7 @@ from conda_forge_feedstock_ops.convert import (
     convert_feedstock_to_v1_containerized,
     convert_feedstock_to_v1_local,
 )
-from conda_forge_feedstock_ops.utils import get_yaml_parser
+from conda_forge_feedstock_ops.yaml import get_yaml_parser
 
 PYTHON_V1_MIN_SUB_RE = re.compile(
     r"python \$\{\{\s*python_min\s*\}\}(\s|$)",

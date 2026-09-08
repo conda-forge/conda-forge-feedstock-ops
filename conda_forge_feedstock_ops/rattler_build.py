@@ -6,11 +6,13 @@ import uuid
 
 from conda_forge_feedstock_ops.utils import (
     clean_rattler_cache,
-    get_yaml_parser,
     print_debug,
 )
 from conda_forge_feedstock_ops.virtual_packages import (
     virtual_package_repodata,
+)
+from conda_forge_feedstock_ops.yaml import (
+    get_yaml_parser,
 )
 
 atexit.register(clean_rattler_cache)

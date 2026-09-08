@@ -21,7 +21,6 @@ from conda.models.match_spec import MatchSpec
 from conda_build.jinja_context import context_processor as conda_build_context_processor
 from conda_build.utils import download_channeldata
 from conda_forge_metadata.artifact_info import get_artifact_info_as_json
-from ruamel.yaml import YAML
 
 from conda_forge_feedstock_ops.settings import FeedstockOpsSettings
 
@@ -697,19 +696,3 @@ def clean_rattler_cache():
         check=False,
         capture_output=True,
     )
-
-
-def get_yaml_parser(*, typ):
-    """Yaml parser that can be jinja2 aware and handles None."""
-    # using a function here so settings are always the same
-
-    def represent_none(self, data):
-        return self.represent_scalar("tag:yaml.org,2002:null", "")
-
-    parser = YAML(typ=typ)  # spellchecker:disable-line
-    parser.indent(mapping=2, sequence=4, offset=2)
-    parser.width = 320
-    parser.preserve_quotes = True
-    parser.representer.ignore_aliases = lambda x: True
-    parser.representer.add_representer(type(None), represent_none)
-    return parser

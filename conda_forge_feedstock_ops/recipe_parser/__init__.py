@@ -12,4 +12,3 @@ with modifications.
 
 from ._parser import CONDA_SELECTOR as CONDA_SELECTOR
 from ._parser import CondaMetaYAML as CondaMetaYAML
-from ._parser import get_yaml_parser as get_yaml_parser
