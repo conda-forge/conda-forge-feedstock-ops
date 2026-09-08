@@ -6,6 +6,7 @@ Code from conda-forge-bot under BSD-3-Clause
 with modifications.
 """
 
+import copy
 import glob
 import itertools
 import os
@@ -31,6 +32,13 @@ YAML_PATH_V1 = os.path.join(
     "update_version_tests",
     "v1_yaml",
 )
+
+POSSIBLE_V0_REPLACEMENTS = {
+    "multisrclist": {
+        "- url: https://mirrors.edge.kernel.org/pub/software/scm/git/git-{{ version }}.tar.gz  # [not win]": "- url: https://mirrors.edge.kernel.org/pub/software/scm/git/git-{{ version }}.tar.xz  # [not win]",
+        "sha256: a98c9b96d91544b130f13bf846ff080dda2867e77fe08700b793ab14ba5346f6  # [not win]": "sha256: c060291a3ffb43d7c99f4aa5c4d37d3751cf6bca683e7344ea407ea504d9a8d0  # [not win]",
+    }
+}
 
 
 def _collect_all_v0_recipe_info():
@@ -134,7 +142,17 @@ def test_update_version_update_version_v0(fs_name, version, use_container):
         with open(os.path.join(YAML_PATH_V0, f"version_{fs_name}_correct.yaml")) as fp:
             output = fp.read()
 
-        assert actual_output == output
+        possible_outputs = [output]
+        for rpls in POSSIBLE_V0_REPLACEMENTS.get(fs_name, {}):
+            possible_output = copy.copy(output)
+            for k, v in rpls.items():
+                possible_output = possible_output.replace(k, v)
+            possible_outputs.append(possible_output)
+
+        if not any(
+            actual_output == possible_output for possible_output in possible_outputs
+        ):
+            assert actual_output == output
 
 
 def _collect_all_v1_recipe_info():
