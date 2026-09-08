@@ -44,8 +44,6 @@ requirements:
 outputs:
   # Contains everything
   - name: llvmdev
-    script: install_llvm.sh  # [unix]
-    script: install_llvm.bat  # [win]
     build:
       activate_in_script: true
     requirements:
@@ -96,7 +94,6 @@ outputs:
   # Contains the shared libraries. To make different LLVM libraries co-installable
   # soversion is appended to the package name.
   - name: libllvm{{ major_ver }}
-    script: install_llvm.sh  # [not win]
     build:
       activate_in_script: true
       run_exports:   # [not win]
