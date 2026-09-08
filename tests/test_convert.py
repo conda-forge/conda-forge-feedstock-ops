@@ -73,7 +73,10 @@ def test_convert_convert_to_v1_containerized(tmp_path, feedstock_name, ref):
         recipe_yaml = fp.read()
     assert not recipe_yaml.endswith("\n\n")
     if orig_bnum is not None:
-        assert f"number: {orig_bnum + 1:d}" in recipe_yaml
+        assert any(
+            f"{prefix}: {orig_bnum + 1:d}" in recipe_yaml
+            for prefix in ["build", "number", "build_number"]
+        )
     assert not PYTHON_V1_MIN_SUB_RE.search(recipe_yaml)
 
 
@@ -114,7 +117,10 @@ def test_convert_convert_to_v1_local(tmp_path, feedstock_name, ref):
         recipe_yaml = fp.read()
     assert not recipe_yaml.endswith("\n\n")
     if orig_bnum is not None:
-        assert f"number: {orig_bnum + 1:d}" in recipe_yaml
+        assert any(
+            f"{prefix}: {orig_bnum + 1:d}" in recipe_yaml
+            for prefix in ["build", "number", "build_number"]
+        )
     assert not PYTHON_V1_MIN_SUB_RE.search(recipe_yaml)
 
 
