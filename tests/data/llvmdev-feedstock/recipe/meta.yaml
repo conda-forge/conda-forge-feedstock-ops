@@ -151,8 +151,6 @@ outputs:
 
   # Contains LLVM tools with a version suffix
   - name: llvm-tools-{{ major_ver }}
-    script: install_llvm.sh  # [unix]
-    script: install_llvm.bat  # [win]
     build:
       activate_in_script: true
       # On Windows there are no symlinks and copying will create a new package
@@ -186,8 +184,6 @@ outputs:
 
   # Contains LLVM tools
   - name: llvm-tools
-    script: install_llvm.sh  # [unix]
-    script: install_llvm.bat  # [win]
     build:
       activate_in_script: true
     requirements:
@@ -225,8 +221,6 @@ outputs:
 
   # Contains LLVM-C shared library
   - name: libllvm-c{{ major_ver }}
-    script: install_llvm.sh  # [unix]
-    script: install_llvm.bat  # [win]
     build:
       run_exports:
         - {{ pin_subpackage("libllvm-c" + major_ver, max_pin="x.x") }}
@@ -259,7 +253,6 @@ outputs:
   - name: lit
     build:
       noarch: python
-      script: python -m pip install llvm/utils/lit --no-deps -vv
       activate_in_script: true
       skip: true  # [not linux64]
       entry_points:
