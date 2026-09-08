@@ -1,3 +1,15 @@
+"""
+Code from conda-forge-bot
+
+  https://github.com/conda-forge/conda-forge-bot/blob/main/conda_forge_tick/hashing.py
+
+under BSD-3-Clause
+
+  https://github.com/conda-forge/conda-forge-bot/blob/main/License
+
+with modifications.
+"""
+
 import functools
 import hashlib
 import math
