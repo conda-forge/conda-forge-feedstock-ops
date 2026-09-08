@@ -494,6 +494,14 @@ def _convert_feedstock_to_v1():
 
 
 def _update_version(*, version, hash_type):
+    """
+    Code from conda-forge-bot under BSD-3-Clause
+
+    https://github.com/conda-forge/conda-forge-bot/blob/main/License
+
+    with modifications.
+    """
+
     from conda_forge_feedstock_ops.os_utils import (
         chmod_plus_rwX,
         get_user_execute_permissions,
@@ -501,7 +509,7 @@ def _update_version(*, version, hash_type):
         sync_dirs,
     )
     from conda_forge_feedstock_ops.update_version import (
-        update_version_local,
+        update_version,
     )
 
     logger = logging.getLogger("conda_forge_feedstock_ops.container")
@@ -532,10 +540,11 @@ def _update_version(*, version, hash_type):
 
         reset_permissions_with_user_execute(fs_dir, input_permissions)
 
-        updated, errors = update_version_local(
+        updated, errors = update_version(
             fs_dir,
             version,
             hash_type,
+            use_container=False,
         )
         data = {"updated": updated, "errors": errors}
 

@@ -1,3 +1,11 @@
+"""
+Code from conda-forge-bot under BSD-3-Clause
+
+  https://github.com/conda-forge/conda-forge-bot/blob/main/License
+
+with modifications.
+"""
+
 import collections.abc
 import hashlib
 import io
@@ -594,9 +602,7 @@ def _try_to_update_version(cmeta: Any, src, hash_type: str):
     return updated_version, errors
 
 
-def update_version_feedstock_dir(
-    feedstock_dir, version, hash_type="sha256", use_container=None
-):
+def update_version(feedstock_dir, version, hash_type="sha256", use_container=None):
     """Update the version in a recipe.
 
     Parameters
