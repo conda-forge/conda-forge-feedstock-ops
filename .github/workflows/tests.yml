@@ -68,4 +68,4 @@ jobs:
       - name: run tests
         run: |
           export RUST_BACKTRACE=full
-          pytest -n 2 -vvv tests
+          pytest -n 4 -vvv tests
