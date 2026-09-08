@@ -196,7 +196,7 @@ outputs:
 
   - name: cross-r-base
     build:
-      skip: True  # [win]
+      skip: true  # [win]
     script: install-cross-activate.sh
     requirements:
       run:
