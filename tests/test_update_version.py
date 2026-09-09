@@ -250,6 +250,8 @@ def test_update_version_update_version_v1(fs_name, version, use_container):
             version,
             use_container=use_container,
         )
+        assert isinstance(errors, set)
+        assert isinstance(updated, bool)
 
         assert updated, errors
         assert not errors, errors
