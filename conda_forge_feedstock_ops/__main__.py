@@ -14,7 +14,6 @@ These operations return their info by printing a JSON blob to stdout.
 
 import copy
 import glob
-import json
 import logging
 import os
 import shutil
@@ -25,7 +24,6 @@ import traceback
 from contextlib import contextmanager, redirect_stdout
 
 import click
-import orjson
 
 existing_feedstock_node_attrs_option = click.option(
     "--existing-feedstock-node-attrs",
@@ -149,6 +147,7 @@ def _execute_git_cmds_and_report(*, cmds, cwd, msg, ignore_stderr=False):
 
 
 def _rerender_feedstock(*, exclusive_config_file, timeout):
+    from conda_forge_feedstock_ops.json import load
     from conda_forge_feedstock_ops.os_utils import (
         get_user_execute_permissions,
         reset_permissions_with_user_execute,
@@ -172,7 +171,7 @@ def _rerender_feedstock(*, exclusive_config_file, timeout):
             f"permissions-{os.path.basename(input_fs_dir)}.json",
         )
         with open(input_permissions) as f:
-            input_permissions = json.load(f)
+            input_permissions = load(f)
 
         fs_dir = os.path.join(tmpdir, os.path.basename(input_fs_dir))
         sync_dirs(input_fs_dir, fs_dir, ignore_dot_git=True, update_git=False)
@@ -353,6 +352,7 @@ def _check_solvable(
     fail_fast,
 ):
     from conda_forge_feedstock_ops.check_solvable import is_recipe_solvable
+    from conda_forge_feedstock_ops.json import loads
 
     logger = logging.getLogger("conda_forge_feedstock_ops.container")
 
@@ -369,13 +369,14 @@ def _check_solvable(
         additional_channels=(
             additional_channels.split(",") if additional_channels else None
         ),
-        build_platform=json.loads(build_platform) if build_platform else None,
+        build_platform=loads(build_platform) if build_platform else None,
     )
     return data
 
 
 def _convert_feedstock_to_v1():
     from conda_forge_feedstock_ops.convert import convert_feedstock_to_v1_local
+    from conda_forge_feedstock_ops.json import load
     from conda_forge_feedstock_ops.os_utils import (
         get_user_execute_permissions,
         reset_permissions_with_user_execute,
@@ -398,7 +399,7 @@ def _convert_feedstock_to_v1():
             f"permissions-{os.path.basename(input_fs_dir)}.json",
         )
         with open(input_permissions) as f:
-            input_permissions = json.load(f)
+            input_permissions = load(f)
 
         fs_dir = os.path.join(tmpdir, os.path.basename(input_fs_dir))
         sync_dirs(input_fs_dir, fs_dir, ignore_dot_git=True, update_git=False)
@@ -502,6 +503,7 @@ def _update_version(*, version, hash_type):
     with modifications.
     """
 
+    from conda_forge_feedstock_ops.json import loads
     from conda_forge_feedstock_ops.os_utils import (
         chmod_plus_rwX,
         get_user_execute_permissions,
@@ -530,7 +532,7 @@ def _update_version(*, version, hash_type):
             f"permissions-{os.path.basename(input_fs_dir)}.json",
         )
         with open(input_permissions, "rb") as f:
-            input_permissions = orjson.loads(f.read())
+            input_permissions = loads(f.read())
 
         fs_dir = os.path.join(tmpdir, os.path.basename(input_fs_dir))
         sync_dirs(input_fs_dir, fs_dir, ignore_dot_git=True, update_git=False)
