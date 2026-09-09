@@ -57,9 +57,9 @@ jobs:
           readme_file: "Dockerfile_README.md"
 
       - name: update feedstock version
-        uses: beckermr/update-feedstock-version@cb627a11db9e5429959751ab82912fe951648833 # v9
+        uses: beckermr/update-feedstock-version@9da3bfbc2d131ac1a36c3bd68ca92ac24e84c96d # v10
         with:
           feedstock: conda-forge-feedstock-ops-feedstock
           version: ${{ github.event.release.tag_name }}
-          github-token: ${{ secrets.AUTOTICK_BOT_TOKEN }}
+          github-token: ${{ secrets.CF_ADMIN_GITHUB_TOKEN }}
           automerge: false
