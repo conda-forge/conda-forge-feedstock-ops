@@ -13,7 +13,6 @@ from collections.abc import Mapping
 
 import conda_build.api
 import conda_package_handling.api
-import orjson
 import requests
 import wurlitzer
 import zstandard
@@ -22,6 +21,7 @@ from conda_build.jinja_context import context_processor as conda_build_context_p
 from conda_build.utils import download_channeldata
 from conda_forge_metadata.artifact_info import get_artifact_info_as_json
 
+from conda_forge_feedstock_ops.json import loads
 from conda_forge_feedstock_ops.settings import FeedstockOpsSettings
 
 DEFAULT_RUN_EXPORTS = {
@@ -284,7 +284,7 @@ def _get_run_exports_from_download(channel_url, subdir, pkg):
 
             if os.path.exists(rxpth):
                 with open(rxpth) as fp:
-                    run_exports = orjson.loads(fp.read())
+                    run_exports = loads(fp.read())
             else:
                 run_exports = {}
 
@@ -321,7 +321,7 @@ def _fetch_json_zst(url):
         return None
     compressed_binary = res.content
     binary = zstandard.decompress(compressed_binary)
-    return orjson.loads(binary.decode("utf-8"))
+    return loads(binary.decode("utf-8"))
 
 
 @functools.cache

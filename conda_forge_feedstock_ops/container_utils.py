@@ -5,6 +5,7 @@ import pprint
 import subprocess
 from collections.abc import Callable, Iterable
 
+from conda_forge_feedstock_ops.json import loads
 from conda_forge_feedstock_ops.settings import FeedstockOpsSettings
 
 logger = logging.getLogger(__name__)
@@ -108,7 +109,7 @@ def _get_proxy_mode_container_args():
 
 def run_container_operation(
     args: Iterable[str],
-    json_loads: Callable = json.loads,
+    json_loads: Callable = loads,
     tmpfs_size_mb: int = DEFAULT_CONTAINER_TMPFS_SIZE_MB,
     input: str | None = None,
     mount_dir: str | None = None,
@@ -122,7 +123,7 @@ def run_container_operation(
     args
         The arguments to pass to the container.
     json_loads
-        The function to use to load JSON to a string, by default `json.loads`.
+        The function to use to load JSON to a string, by default `conda_forge_feedstock_ops.json.loads`.
     tmpfs_size_mb
         The size of the tmpfs in MB, by default 10.
     input

@@ -1,4 +1,3 @@
-import json
 import os
 import pathlib
 import shutil
@@ -6,6 +5,7 @@ import subprocess
 
 import pytest
 
+from conda_forge_feedstock_ops.json import loads
 from conda_forge_feedstock_ops.rattler_solver import rattler_solver_factory
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
@@ -32,7 +32,7 @@ if HAVE_CONTAINERS:
             capture_output=True,
             text=True,
         ).stdout.splitlines():
-            image = json.loads(line)
+            image = loads(line)
             if (
                 image["Repository"] == "conda-forge-feedstock-ops"
                 and image["Tag"] == "test"
@@ -153,7 +153,7 @@ def pytest_generate_tests(metafunc):
 
 
 def get_rattler_build_version():
-    pkgs = json.loads(
+    pkgs = loads(
         subprocess.run(
             ["conda", "list", "rattler-build", "--json"],
             check=True,
