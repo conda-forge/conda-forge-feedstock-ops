@@ -45,11 +45,12 @@ def _old_build_number(recipe_text: str) -> int:
 def _update_build_number_in_context(
     recipe: dict[str, Any], new_build_number: int
 ) -> bool:
+    is_modified = False
     for key in recipe.get("context", {}):
-        if key in {"build_number", "build", "number"}:
+        if key in {"build_number", "build", "number", "build_num"}:
             recipe["context"][key] = new_build_number
-            return True
-    return False
+            is_modified = True
+    return is_modified
 
 
 def _update_build_number_in_recipe(
@@ -57,14 +58,24 @@ def _update_build_number_in_recipe(
 ) -> bool:
     is_modified = False
     if "build" in recipe and "number" in recipe["build"]:
-        recipe["build"]["number"] = new_build_number
-        is_modified = True
+        try:
+            int(recipe["build"]["number"])
+        except Exception:
+            pass
+        else:
+            recipe["build"]["number"] = new_build_number
+            is_modified = True
 
     if "outputs" in recipe:
         for output in recipe["outputs"]:
             if "build" in output and "number" in output["build"]:
-                output["build"]["number"] = new_build_number
-                is_modified = True
+                try:
+                    int(output["build"]["number"])
+                except Exception:
+                    pass
+                else:
+                    output["build"]["number"] = new_build_number
+                    is_modified = True
 
     return is_modified
 

@@ -57,6 +57,14 @@ def test_update_build_number_v0_function(meta_yaml, new_meta_yaml, tmp_path):
         ),
         ("context:\n  build_number: 2\n", "context:\n  build_number: 0\n"),
         ("context:\n  build: 2\n", "context:\n  build: 0\n"),
+        (
+            "context:\n  build_num: 2\nbuild\n  number: ${{ build_num }}",
+            "context:\n  build_num: 0\nbuild\n  number: ${{ build_num }}",
+        ),
+        (
+            "context:\n  build_nu: 2\nbuild\n  number: ${{ build_num }}",
+            "context:\n  build_nu: 2\nbuild\n  number: ${{ build_num }}",
+        ),
     ],
 )
 def test_update_build_number_v1(meta_yaml, new_meta_yaml, tmp_path):
