@@ -3,7 +3,7 @@ import os
 import subprocess
 import tempfile
 import uuid
-from collections.abc import MutableSequence, MutableMapping
+from collections.abc import MutableMapping, MutableSequence
 
 from conda_forge_feedstock_ops.utils import (
     clean_rattler_cache,
