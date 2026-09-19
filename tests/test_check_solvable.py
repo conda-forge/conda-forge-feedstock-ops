@@ -761,3 +761,16 @@ def test_check_solvable_runs_local_logging(solver, capsys, caplog, level):
             "DEBUG log message 'rendering recipe with conda build' found!"
         )
         assert not any_debug, "Found lines that start with 'DEBUG'!"
+
+
+def test_v1_boolean_variant():
+    """a variant key set to `false` must not select the `if:` branch that tests it"""
+    feedstock_dir = os.path.join(DATA_DIR, "v1-bool-variant-feedstock")
+    solvable, errors, _ = is_recipe_solvable(
+        feedstock_dir,
+        solver="rattler",
+        timeout=None,
+        fail_fast=True,
+        use_container=False,
+    )
+    assert solvable, pprint.pformat(errors)
