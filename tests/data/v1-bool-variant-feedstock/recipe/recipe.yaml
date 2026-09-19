@@ -1,0 +1,14 @@
+schema_version: 1
+
+package:
+  name: v1-bool-variant
+  version: "0.1"
+
+requirements:
+  host:
+    - python
+    # only the abi3 build pins python down to python_min; taking this branch
+    # when is_abi3 is false leaves two conflicting python specs in host
+    - if: is_abi3
+      then:
+        - python ${{ python_min }}.*

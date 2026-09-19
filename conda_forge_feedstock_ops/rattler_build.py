@@ -3,6 +3,7 @@ import os
 import subprocess
 import tempfile
 import uuid
+from collections.abc import MutableMapping, MutableSequence
 
 from conda_forge_feedstock_ops.utils import (
     clean_rattler_cache,
@@ -16,6 +17,51 @@ from conda_forge_feedstock_ops.yaml import (
 )
 
 atexit.register(clean_rattler_cache)
+
+
+# conda-build returns every variant value as a string, keeping whatever
+# spelling the config used, but conda-smithy writes the boolean pinning keys
+# (is_abi3, is_python_min, is_freethreading, ...) into .ci_support as YAML
+# booleans. rattler-build evaluates `if:` with minijinja, where the non-empty
+# string "false" is truthy, so passing the stringified values through would
+# take the wrong branch of `if: is_abi3` and friends.
+#
+# These are exactly the YAML 1.2 core schema spellings, which is what
+# rattler-build itself recognises when it reads the same file directly. The
+# YAML 1.1 spellings (yes/no/on/off/y/n) are plain strings to it, so they have
+# to stay strings here too, or the bot would disagree with CI in the other
+# direction.
+_YAML_BOOLS = {
+    "true": True,
+    "True": True,
+    "TRUE": True,
+    "false": False,
+    "False": False,
+    "FALSE": False,
+}
+
+
+def restore_yaml_bools(value):
+    """Undo conda-build's stringification of boolean variant values.
+
+    Parameters
+    ----------
+    value : object
+        A variant config, or any value nested inside one.
+
+    Returns
+    -------
+    value : object
+        The same structure with the strings ``"true"`` and ``"false"``
+        replaced by the corresponding booleans.
+    """
+    if isinstance(value, str):
+        return _YAML_BOOLS.get(value, value)
+    if isinstance(value, MutableSequence):
+        return [restore_yaml_bools(item) for item in value]
+    if isinstance(value, MutableMapping):
+        return {key: restore_yaml_bools(item) for key, item in value.items()}
+    return value
 
 
 def run_rattler_build(command):
@@ -54,10 +100,7 @@ def invoke_rattler_build(
                 ]
 
             yaml = get_yaml_parser(typ="rt")
-            yaml.dump(
-                {k: v for k, v in variants.items()},
-                fp,
-            )
+            yaml.dump(restore_yaml_bools(variants), fp)
 
         channels_args = []
         if not channel_sources:
