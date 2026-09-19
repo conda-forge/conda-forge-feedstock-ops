@@ -3,6 +3,7 @@ import os
 import subprocess
 import tempfile
 import uuid
+from collections.abc import MutableSequence, MutableMapping
 
 from conda_forge_feedstock_ops.utils import (
     clean_rattler_cache,
@@ -56,9 +57,9 @@ def restore_yaml_bools(value):
     """
     if isinstance(value, str):
         return _YAML_BOOLS.get(value, value)
-    if isinstance(value, list):
+    if isinstance(value, MutableSequence):
         return [restore_yaml_bools(item) for item in value]
-    if isinstance(value, dict):
+    if isinstance(value, MutableMapping):
         return {key: restore_yaml_bools(item) for key, item in value.items()}
     return value
 
