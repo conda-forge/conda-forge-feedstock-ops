@@ -40,7 +40,7 @@ jobs:
 
           pip uninstall conda-forge-feedstock-ops --yes
           rm -rf dist/*
-          python -m build --sdist . --outdir dist
+          python -m build --no-isolation --sdist . --outdir dist
           pip install --no-deps --no-build-isolation dist/*.tar.gz
           cd ..
           python -c "import conda_forge_feedstock_ops; assert conda_forge_feedstock_ops.__version__ != '0.0.0'"
