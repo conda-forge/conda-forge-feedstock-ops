@@ -7,7 +7,7 @@ import pprint
 import textwrap
 from functools import lru_cache
 
-from rattler import Channel, MatchSpec, Platform, RepoDataRecord, solve
+from rattler import Channel, MatchSpec, RepoDataRecord, Subdir, solve
 
 from conda_forge_feedstock_ops.utils import (
     DEFAULT_RUN_EXPORTS,
@@ -50,7 +50,7 @@ class RattlerSolver:
                 _channels.append(c)
         self._channels = [Channel(c) for c in _channels]
         self.platform_arch = platform_arch
-        self._platforms = [Platform(self.platform_arch), Platform("noarch")]
+        self._platforms = [Subdir(self.platform_arch), Subdir("noarch")]
 
     def solve(
         self,
